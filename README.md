@@ -3,9 +3,11 @@
 Bridging the gap for underserved communities through innovative financial technology.
 
 ## Vision
+
 OnePay aims to address financial exclusion by providing accessible, user-friendly financial tools to the 1.7 billion unbanked adults globally. Our solution integrates AI-powered insights, secure payment systems, and personalized financial literacy tools to empower users with the resources they need for economic independence.
 
 ## Target Users
+
 - Street vendors and small business owners
 - Daily wage workers
 - First-time banking users
@@ -15,34 +17,40 @@ OnePay aims to address financial exclusion by providing accessible, user-friendl
 ## Core Features
 
 ### Smart Onboarding
+
 - Step-by-step guided process
 - AI-powered KYC verification
 - Personalized user preferences
 
 ### Secure Payments
+
 - QR code-based transactions
 - Peer-to-peer transfers
 - Bill payment integrations
 
 ### AI Financial Assistant
+
 - Natural Language Processing for queries
 - Automated expense categorization
 - Real-time financial advice
 - Budget optimization
 
 ### Financial Education
+
 - Gamified, interactive tutorials
 - Adaptive learning paths
 - Achievement system
 - Progress tracking
 
 ### Budgeting Tools
+
 - Easy budget creation and tracking
 - Real-time alerts
 - Detailed analytics
 - Spending pattern insights
 
 ### Additional Features
+
 - Community savings groups
 - Emergency fund alerts
 - Dynamic goal setting
@@ -81,6 +89,7 @@ OnePay aims to address financial exclusion by providing accessible, user-friendl
 ## Tech Stack
 
 ### Mobile App (Frontend)
+
 - React Native with Expo
 - TypeScript
 - React Navigation for routing
@@ -91,6 +100,7 @@ OnePay aims to address financial exclusion by providing accessible, user-friendl
 - Jest for testing
 
 ### Backend
+
 - Node.js with Express.js
 - TypeScript
 - PostgreSQL for structured data
@@ -101,6 +111,7 @@ OnePay aims to address financial exclusion by providing accessible, user-friendl
 - ESLint and Prettier for code quality
 
 ### DevOps & Tools
+
 - Git for version control
 - GitHub Actions for CI/CD
 - Docker for containerization
@@ -111,6 +122,7 @@ OnePay aims to address financial exclusion by providing accessible, user-friendl
 ## Getting Started
 
 ### Prerequisites
+
 - Node.js (v18 or higher)
 - npm or yarn
 - Expo CLI (`npm install -g expo-cli`)
@@ -121,6 +133,7 @@ OnePay aims to address financial exclusion by providing accessible, user-friendl
 ### Installation
 
 #### Backend Setup
+
 ```bash
 cd backend
 npm install
@@ -129,6 +142,7 @@ npm run dev
 ```
 
 #### Mobile Setup
+
 ```bash
 cd mobile
 npm install
@@ -139,10 +153,12 @@ npm start
 ## Branch Strategy
 
 ### Main Branches
+
 - `main` - Production branch, very stable
 - `development` - Integration branch for features and fixes
 
 ### Development Workflow
+
 1. All feature/bugfix branches should be created from `development` branch
 2. Create a new branch with appropriate prefix:
    - `feat/` for new features
@@ -155,12 +171,14 @@ npm start
 5. After review and approval, code will be merged
 
 ⚠️ **Important:**
+
 - Never push directly to `main` or `development` branches
 - All changes must go through Pull Request review process
 
 ## Git Commit Guidelines
 
 ### Commit Message Format
+
 ```
 <type>: <subject>
 
@@ -168,6 +186,7 @@ npm start
 ```
 
 ### Types
+
 - `feat`: New feature
 - `fix`: Bug fix
 - `chore`: Build process or auxiliary tool changes
@@ -177,11 +196,13 @@ npm start
 - `docs`: Documentation changes
 
 ### Rules
+
 - Use lowercase in commit messages
 - Be descriptive but concise
 - Use present tense ("add feature" not "added feature")
 
 Example:
+
 ```
 feat: add user authentication
 fix: resolve login screen crash
@@ -191,6 +212,7 @@ refactor: optimize database queries
 ```
 
 ## Contributing
+
 1. Create a new branch from `development`
 2. Make your changes
 3. Follow commit message guidelines
@@ -217,7 +239,9 @@ refactor: optimize database queries
 - Testing and documentation
 
 ## License
+
 This project is proprietary and confidential.
 
 ## Contact
+
 For any queries, please reach out to the project maintainers.
