@@ -23,7 +23,6 @@ OnePay aims to address financial exclusion by providing accessible, user-friendl
 - QR code-based transactions
 - Peer-to-peer transfers
 - Bill payment integrations
-- Offline transaction capabilities
 
 ### AI Financial Assistant
 - Natural Language Processing for queries
