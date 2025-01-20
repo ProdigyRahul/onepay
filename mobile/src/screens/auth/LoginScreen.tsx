@@ -1,9 +1,21 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, StatusBar } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  TouchableOpacity,
+  StatusBar,
+  Alert,
+} from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { generateOTP } from '../../services/api/auth';
+import { CustomKeyboard } from '../../components/common/CustomKeyboard';
 import { COLORS } from '../../theme/colors';
 import { FONTS, FONT_SIZES } from '../../theme/typography';
 import { wp, hp } from '../../utils/responsive';
-import { CustomKeyboard } from '../../components/common/CustomKeyboard';
+import { RootStackParamList } from '../../navigation/types';
 import { RollingText } from '../../components/common/RollingText';
 
 const ROLLING_MESSAGES = [
@@ -13,8 +25,12 @@ const ROLLING_MESSAGES = [
   'Zero transaction fees',
 ];
 
-export const LoginScreen = () => {
+type LoginScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Login'>;
+
+const LoginScreen = () => {
+  const navigation = useNavigation<LoginScreenNavigationProp>();
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleKeyPress = useCallback((key: string) => {
     if (key === 'backspace') {
@@ -23,6 +39,27 @@ export const LoginScreen = () => {
       setPhoneNumber(prev => prev + key);
     }
   }, [phoneNumber]);
+
+  const handleContinue = async () => {
+    if (phoneNumber.length !== 10) return;
+
+    try {
+      setIsLoading(true);
+      const formattedPhone = `+91${phoneNumber}`;
+      const response = await generateOTP(formattedPhone);
+      navigation.navigate('OTP', {
+        phoneNumber: formattedPhone,
+        otpFromResponse: response.otp,
+      });
+    } catch (error: any) {
+      Alert.alert(
+        'Error',
+        error.response?.data?.error || 'Failed to send OTP'
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -58,13 +95,14 @@ export const LoginScreen = () => {
               styles.continueButton,
               phoneNumber.length === 10 && styles.continueButtonActive,
             ]}
-            disabled={phoneNumber.length !== 10}>
+            disabled={phoneNumber.length !== 10 || isLoading}
+            onPress={handleContinue}>
             <Text
               style={[
                 styles.continueText,
                 phoneNumber.length === 10 && styles.continueTextActive,
               ]}>
-              Continue
+              {isLoading ? 'Sending OTP...' : 'Continue'}
             </Text>
           </TouchableOpacity>
 
@@ -100,7 +138,7 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: FONTS.regular,
     fontSize: FONT_SIZES.xxl,
-    color: COLORS.text.secondary,
+    color: COLORS.black,
     marginBottom: hp(1),
   },
   appName: {
@@ -131,23 +169,23 @@ const styles = StyleSheet.create({
   countryCode: {
     fontFamily: FONTS.medium,
     fontSize: FONT_SIZES.lg,
-    color: COLORS.text.secondary,
+    color: COLORS.black,
     marginRight: wp(2),
   },
   separator: {
     width: 1,
     height: hp(3),
-    backgroundColor: '#E0E0E0',
+    backgroundColor: COLORS.border,
     marginHorizontal: wp(2),
   },
   phoneNumber: {
     fontFamily: FONTS.regular,
     fontSize: FONT_SIZES.lg,
-    color: COLORS.text.secondary,
+    color: COLORS.black,
     flex: 1,
   },
   phoneNumberPlaceholder: {
-    color: '#999999',
+    color: COLORS.disabled,
   },
   bottomSection: {
     flex: 1,
@@ -157,7 +195,7 @@ const styles = StyleSheet.create({
   continueButton: {
     width: '100%',
     height: hp(6),
-    backgroundColor: '#F5F5F5',
+    backgroundColor: COLORS.surface,
     borderRadius: wp(2),
     justifyContent: 'center',
     alignItems: 'center',
@@ -171,7 +209,7 @@ const styles = StyleSheet.create({
   continueText: {
     fontFamily: FONTS.medium,
     fontSize: FONT_SIZES.lg,
-    color: '#999999',
+    color: COLORS.disabled,
   },
   continueTextActive: {
     color: COLORS.white,
@@ -179,7 +217,7 @@ const styles = StyleSheet.create({
   termsText: {
     fontFamily: FONTS.regular,
     fontSize: FONT_SIZES.sm,
-    color: COLORS.text.secondary,
+    color: COLORS.black,
     textAlign: 'center',
     marginBottom: hp(4),
   },
@@ -187,4 +225,6 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
     textDecorationLine: 'underline',
   },
-}); 
+});
+
+export default LoginScreen; 

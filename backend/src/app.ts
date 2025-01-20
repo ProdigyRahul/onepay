@@ -3,6 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import { env } from './config/env.config';
 import userRoutes from './routes/userRoutes';
+import authRoutes from './routes/authRoutes';
 
 const app: Application = express();
 
@@ -20,6 +21,7 @@ app.use(express.urlencoded({ extended: true }));
 // API Routes
 const apiPrefix = env.API_PREFIX || '/api';
 app.use(`${apiPrefix}/users`, userRoutes);
+app.use(`${apiPrefix}/auth`, authRoutes);
 
 // Health Check Route
 app.get('/health', (_req: Request, res: Response) => {

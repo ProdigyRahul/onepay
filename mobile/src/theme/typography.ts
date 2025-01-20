@@ -1,4 +1,5 @@
 import { fontSize } from '../utils/responsive';
+import { Platform } from 'react-native';
 
 export const FONTS = {
   regular: 'Roboto-Regular',
@@ -25,4 +26,32 @@ export const LINE_HEIGHTS = {
   xl: fontSize(32),
   xxl: fontSize(36),
   xxxl: fontSize(44),
+} as const;
+
+export const TYPOGRAPHY = {
+  h1: {
+    fontSize: 24,
+    fontWeight: '700' as const,
+    fontFamily: Platform.select({ ios: 'System', android: 'Roboto' }),
+  },
+  h2: {
+    fontSize: 20,
+    fontWeight: '600' as const,
+    fontFamily: Platform.select({ ios: 'System', android: 'Roboto' }),
+  },
+  body: {
+    fontSize: 16,
+    fontWeight: '400' as const,
+    fontFamily: Platform.select({ ios: 'System', android: 'Roboto' }),
+  },
+  button: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    fontFamily: Platform.select({ ios: 'System', android: 'Roboto' }),
+  },
+  caption: {
+    fontSize: 14,
+    fontWeight: '400' as const,
+    fontFamily: Platform.select({ ios: 'System', android: 'Roboto' }),
+  },
 } as const; 
