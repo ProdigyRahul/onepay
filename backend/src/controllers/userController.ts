@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, User as PrismaUser } from '@prisma/client';
 import { ApiError } from '../utils/apiError';
 import {
   AuthenticatedRequest,
@@ -7,8 +7,7 @@ import {
   KYCData,
   ProfileData,
   SafeUser,
-  CreateUserRequest,
-  User
+  CreateUserRequest
 } from '../types';
 
 const prisma = new PrismaClient();
@@ -25,7 +24,11 @@ declare global {
   }
 }
 
-const sanitizeUser = (user: User): SafeUser => ({
+const sanitizeUser = (user: PrismaUser & {
+  kyc?: { id: string; userId: string; panNumber: string; dateOfBirth: Date; status: string; createdAt: Date; updatedAt: Date; } | null;
+  wallet?: { id: string; balance: number; currency: string; } | null;
+  gamification?: { id: string; level: number; points: number; } | null;
+}): SafeUser => ({
   id: user.id,
   phoneNumber: user.phoneNumber,
   firstName: user.firstName,

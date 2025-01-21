@@ -1,5 +1,26 @@
 import { Request } from 'express';
-import { IncomeRange, SpendingType, PurposeType, Role } from '@prisma/client';
+import { Role, KYCStatus } from '@prisma/client';
+
+export type IncomeRange =
+  | 'RANGE_0_12500'
+  | 'RANGE_12500_25000'
+  | 'RANGE_25000_50000'
+  | 'RANGE_50000_150000'
+  | 'RANGE_150000_300000'
+  | 'RANGE_300000_2500000'
+  | 'RANGE_2500000_PLUS';
+
+export type SpendingHabit =
+  | 'SPEND_ALL'
+  | 'SPEND_NONE'
+  | 'SPEND_SOMETIMES'
+  | 'SAVE_MOST';
+
+export type UserGoal =
+  | 'EVERYDAY_PAYMENTS'
+  | 'LOANS'
+  | 'INVESTMENTS'
+  | 'TRACK_EXPENSES';
 
 // Base user interface matching Prisma schema
 export interface User {
@@ -13,6 +34,26 @@ export interface User {
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
+  kyc?: {
+    id: string;
+    userId: string;
+    panNumber: string;
+    dateOfBirth: Date;
+    status: KYCStatus;
+    createdAt: Date;
+    updatedAt: Date;
+  } | null;
+  financialProfile?: {
+    id: string;
+    userId: string;
+    incomeRange: IncomeRange;
+    targetSpendingPercentage: number;
+    spendingHabit: SpendingHabit;
+    targetSavingsPercentage: number;
+    primaryGoal: UserGoal;
+    createdAt: Date;
+    updatedAt: Date;
+  } | null;
 }
 
 // Safe user response without sensitive data
@@ -47,16 +88,22 @@ export interface TokenPayload {
 export interface KYCData {
   panNumber: string;
   dateOfBirth: string;
+  status?: 'PENDING' | 'VERIFIED' | 'REJECTED';
+}
+
+export interface FinancialProfileData {
   incomeRange: IncomeRange;
-  spendingType: SpendingType;
-  savingGoal: number;
-  purposeType: PurposeType;
+  targetSpendingPercentage: number;
+  spendingHabit: SpendingHabit;
+  targetSavingsPercentage: number;
+  primaryGoal: UserGoal;
 }
 
 export interface ProfileData {
   firstName?: string;
   lastName?: string;
   email?: string;
+  panNumber?: string;
 }
 
 export interface OTPData {

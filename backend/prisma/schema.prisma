@@ -23,6 +23,7 @@ model User {
 
   // Relations
   kyc           KYC?
+  financialProfile FinancialProfile?
   wallet        Wallet?
   budgets       Budget[]
   notifications Notification[]
@@ -56,10 +57,6 @@ model KYC {
   userId        String    @unique
   panNumber     String    @unique
   dateOfBirth   DateTime
-  incomeRange   IncomeRange
-  spendingType  SpendingType
-  savingGoal    Float
-  purposeType   PurposeType
   status        KYCStatus @default(PENDING)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -68,6 +65,24 @@ model KYC {
   user          User      @relation(fields: [userId], references: [id])
 
   @@map("kyc")
+}
+
+// Financial Profile model
+model FinancialProfile {
+  id                      String        @id @default(uuid())
+  userId                  String        @unique
+  incomeRange            IncomeRange
+  targetSpendingPercentage Float
+  spendingHabit          SpendingHabit
+  targetSavingsPercentage Float
+  primaryGoal            UserGoal
+  createdAt              DateTime      @default(now())
+  updatedAt              DateTime      @updatedAt
+
+  // Relations
+  user                    User          @relation(fields: [userId], references: [id])
+
+  @@map("financial_profiles")
 }
 
 // Wallet model for managing user's money
@@ -294,4 +309,18 @@ enum PurposeType {
   LOANS
   INVESTMENTS
   TRACKING
+}
+
+enum SpendingHabit {
+  SPEND_ALL
+  SPEND_NONE
+  SPEND_SOMETIMES
+  SAVE_MOST
+}
+
+enum UserGoal {
+  EVERYDAY_PAYMENTS
+  LOANS
+  INVESTMENTS
+  TRACK_EXPENSES
 } 

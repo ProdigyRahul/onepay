@@ -3,7 +3,7 @@
 <html lang="en">
 
 <head>
-    <title>Code coverage report for src/controllers/walletController.ts</title>
+    <title>Code coverage report for src/controllers/onboardingController.ts</title>
     <meta charset="utf-8" />
     <link rel="stylesheet" href="../../prettify.css" />
     <link rel="stylesheet" href="../../base.css" />
@@ -19,34 +19,34 @@
 <body>
 <div class='wrapper'>
     <div class='pad1'>
-        <h1><a href="../../index.html">All files</a> / <a href="index.html">src/controllers</a> walletController.ts</h1>
+        <h1><a href="../../index.html">All files</a> / <a href="index.html">src/controllers</a> onboardingController.ts</h1>
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">58.53% </span>
+                <span class="strong">8.51% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>24/41</span>
+                <span class='fraction'>4/47</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">20% </span>
+                <span class="strong">0% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>2/10</span>
+                <span class='fraction'>0/41</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">80% </span>
+                <span class="strong">0% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>4/5</span>
+                <span class='fraction'>0/4</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">58.53% </span>
+                <span class="strong">8.51% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>24/41</span>
+                <span class='fraction'>4/47</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line medium'></div>
+    <div class='status-line low'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -234,16 +234,71 @@
 <a name='L169'></a><a href='#L169'>169</a>
 <a name='L170'></a><a href='#L170'>170</a>
 <a name='L171'></a><a href='#L171'>171</a>
-<a name='L172'></a><a href='#L172'>172</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L172'></a><a href='#L172'>172</a>
+<a name='L173'></a><a href='#L173'>173</a>
+<a name='L174'></a><a href='#L174'>174</a>
+<a name='L175'></a><a href='#L175'>175</a>
+<a name='L176'></a><a href='#L176'>176</a>
+<a name='L177'></a><a href='#L177'>177</a>
+<a name='L178'></a><a href='#L178'>178</a>
+<a name='L179'></a><a href='#L179'>179</a>
+<a name='L180'></a><a href='#L180'>180</a>
+<a name='L181'></a><a href='#L181'>181</a>
+<a name='L182'></a><a href='#L182'>182</a>
+<a name='L183'></a><a href='#L183'>183</a>
+<a name='L184'></a><a href='#L184'>184</a>
+<a name='L185'></a><a href='#L185'>185</a>
+<a name='L186'></a><a href='#L186'>186</a>
+<a name='L187'></a><a href='#L187'>187</a>
+<a name='L188'></a><a href='#L188'>188</a>
+<a name='L189'></a><a href='#L189'>189</a>
+<a name='L190'></a><a href='#L190'>190</a>
+<a name='L191'></a><a href='#L191'>191</a>
+<a name='L192'></a><a href='#L192'>192</a>
+<a name='L193'></a><a href='#L193'>193</a>
+<a name='L194'></a><a href='#L194'>194</a>
+<a name='L195'></a><a href='#L195'>195</a>
+<a name='L196'></a><a href='#L196'>196</a>
+<a name='L197'></a><a href='#L197'>197</a>
+<a name='L198'></a><a href='#L198'>198</a>
+<a name='L199'></a><a href='#L199'>199</a>
+<a name='L200'></a><a href='#L200'>200</a>
+<a name='L201'></a><a href='#L201'>201</a>
+<a name='L202'></a><a href='#L202'>202</a>
+<a name='L203'></a><a href='#L203'>203</a>
+<a name='L204'></a><a href='#L204'>204</a>
+<a name='L205'></a><a href='#L205'>205</a>
+<a name='L206'></a><a href='#L206'>206</a>
+<a name='L207'></a><a href='#L207'>207</a>
+<a name='L208'></a><a href='#L208'>208</a>
+<a name='L209'></a><a href='#L209'>209</a>
+<a name='L210'></a><a href='#L210'>210</a>
+<a name='L211'></a><a href='#L211'>211</a>
+<a name='L212'></a><a href='#L212'>212</a>
+<a name='L213'></a><a href='#L213'>213</a>
+<a name='L214'></a><a href='#L214'>214</a>
+<a name='L215'></a><a href='#L215'>215</a>
+<a name='L216'></a><a href='#L216'>216</a>
+<a name='L217'></a><a href='#L217'>217</a>
+<a name='L218'></a><a href='#L218'>218</a>
+<a name='L219'></a><a href='#L219'>219</a>
+<a name='L220'></a><a href='#L220'>220</a>
+<a name='L221'></a><a href='#L221'>221</a>
+<a name='L222'></a><a href='#L222'>222</a>
+<a name='L223'></a><a href='#L223'>223</a>
+<a name='L224'></a><a href='#L224'>224</a>
+<a name='L225'></a><a href='#L225'>225</a>
+<a name='L226'></a><a href='#L226'>226</a>
+<a name='L227'></a><a href='#L227'>227</a>
+<a name='L228'></a><a href='#L228'>228</a>
+<a name='L229'></a><a href='#L229'>229</a>
+<a name='L230'></a><a href='#L230'>230</a>
+<a name='L231'></a><a href='#L231'>231</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -257,14 +312,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -275,29 +322,20 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -312,29 +350,13 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -348,22 +370,9 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -378,11 +387,41 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -392,12 +431,91 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -406,172 +524,231 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { Response } from 'express';
-import { WalletService } from '../services/walletService';
+import { PrismaClient, Prisma } from '@prisma/client';
 import { ApiError } from '../utils/apiError';
-import { AuthenticatedRequest } from '../types';
-import {
-  CreateWalletDTO,
-  TransactionDTO,
-  TransferDTO,
-  WalletLimitDTO,
-} from '../types/wallet';
+import { AuthenticatedRequest, ProfileData, KYCData, FinancialProfileData, ApiResponse } from '../types';
 &nbsp;
-export const walletController = {
-  // Create wallet
-  createWallet: <span class="fstat-no" title="function not covered" >async </span>(
+const prisma = new PrismaClient();
+&nbsp;
+export const onboardingController = {
+  // Update user profile (name, email, PAN)
+  updateProfile: <span class="fstat-no" title="function not covered" >async </span>(
     req: AuthenticatedRequest,
-    res: Response
+    res: Response&lt;ApiResponse&lt;any&gt;&gt;
   ): Promise&lt;void&gt; =&gt; {
 <span class="cstat-no" title="statement not covered" >    try {</span>
       const userId = <span class="cstat-no" title="statement not covered" >req.user.id;</span>
-      const walletData: CreateWalletDTO = <span class="cstat-no" title="statement not covered" >req.body;</span>
+      const profileData: ProfileData = <span class="cstat-no" title="statement not covered" >req.body;</span>
 &nbsp;
-      const wallet = <span class="cstat-no" title="statement not covered" >await WalletService.createWallet(userId, walletData);</span>
+      const updateData: Prisma.UserUpdateInput = <span class="cstat-no" title="statement not covered" >{</span>
+        firstName: profileData.firstName,
+        lastName: profileData.lastName,
+        email: profileData.email,
+      };
 &nbsp;
-<span class="cstat-no" title="statement not covered" >      res.status(201).json({</span>
-        success: true,
-        data: {
-          id: wallet.id,
-          balance: wallet.balance,
-          currency: wallet.currency,
-          dailyLimit: wallet.dailyLimit,
-          monthlyLimit: wallet.monthlyLimit,
-          isActive: wallet.isActive,
+<span class="cstat-no" title="statement not covered" >      <span class="missing-if-branch" title="if path not taken" >I</span>if (profileData.panNumber) {</span>
+<span class="cstat-no" title="statement not covered" >        updateData.kyc = {</span>
+          upsert: {
+            create: {
+              panNumber: profileData.panNumber,
+              dateOfBirth: new Date(), // Temporary date, will be updated in updateAge
+              status: 'PENDING',
+            },
+            update: {
+              panNumber: profileData.panNumber,
+              status: 'PENDING',
+            },
+          },
+        };
+      }
+&nbsp;
+      const user = <span class="cstat-no" title="statement not covered" >await prisma.user.update({</span>
+        where: { id: userId },
+        data: updateData,
+        include: {
+          kyc: true,
         },
       });
-    } catch (error) {
-<span class="cstat-no" title="statement not covered" >      if (error instanceof ApiError) {</span>
-<span class="cstat-no" title="statement not covered" >        res.status(error.statusCode).json({</span>
-          success: false,
-          error: error.message,
-        });
-      } else {
-<span class="cstat-no" title="statement not covered" >        res.status(500).json({</span>
-          success: false,
-          error: 'Error creating wallet',
-        });
-      }
-    }
-  },
-&nbsp;
-  // Get wallet details
-  getWallet: async (
-    req: AuthenticatedRequest,
-    res: Response
-  ): Promise&lt;void&gt; =&gt; {
-    try {
-      const stats = await WalletService.getWalletStats(req.params.walletId);
-&nbsp;
-      res.json({
-        success: true,
-        data: stats,
-      });
-    } catch (error) {
-<span class="cstat-no" title="statement not covered" >      if (error instanceof ApiError) {</span>
-<span class="cstat-no" title="statement not covered" >        res.status(error.statusCode).json({</span>
-          success: false,
-          error: error.message,
-        });
-      } else {
-<span class="cstat-no" title="statement not covered" >        res.status(500).json({</span>
-          success: false,
-          error: 'Error fetching wallet details',
-        });
-      }
-    }
-  },
-&nbsp;
-  // Add money to wallet
-  addMoney: async (
-    req: AuthenticatedRequest,
-    res: Response
-  ): Promise&lt;void&gt; =&gt; {
-    try {
-      const walletId = req.params.walletId;
-      const transactionData: TransactionDTO = req.body;
-&nbsp;
-      const wallet = await WalletService.addMoney(walletId, transactionData);
-&nbsp;
-      res.json({
-        success: true,
-        data: {
-          balance: wallet.balance,
-          currency: wallet.currency,
-        },
-      });
-    } catch (error) {
-<span class="cstat-no" title="statement not covered" >      if (error instanceof ApiError) {</span>
-<span class="cstat-no" title="statement not covered" >        res.status(error.statusCode).json({</span>
-          success: false,
-          error: error.message,
-        });
-      } else {
-<span class="cstat-no" title="statement not covered" >        res.status(500).json({</span>
-          success: false,
-          error: 'Error adding money to wallet',
-        });
-      }
-    }
-  },
-&nbsp;
-  // Transfer money
-  transfer: async (
-    req: AuthenticatedRequest,
-    res: Response
-  ): Promise&lt;void&gt; =&gt; {
-    try {
-      const walletId = req.params.walletId;
-      const transferData: TransferDTO = req.body;
-&nbsp;
-      await WalletService.transfer(walletId, transferData);
-&nbsp;
-      res.json({
-        success: true,
-        message: 'Transfer completed successfully',
-      });
-    } catch (error) {
-      if (error instanceof ApiError) {
-        res.status(error.statusCode).json({
-          success: false,
-          error: error.message,
-        });
-      } else <span class="missing-if-branch" title="else path not taken" >E</span>{
-<span class="cstat-no" title="statement not covered" >        res.status(500).json({</span>
-          success: false,
-          error: 'Error processing transfer',
-        });
-      }
-    }
-  },
-&nbsp;
-  // Update wallet limits
-  updateLimits: async (
-    req: AuthenticatedRequest,
-    res: Response
-  ): Promise&lt;void&gt; =&gt; {
-    try {
-      const walletId = req.params.walletId;
-      const limitData: WalletLimitDTO = req.body;
-&nbsp;
-      const wallet = await WalletService.updateLimits(walletId, limitData);
 &nbsp;
 <span class="cstat-no" title="statement not covered" >      res.json({</span>
         success: true,
         data: {
-          dailyLimit: wallet.dailyLimit,
-          monthlyLimit: wallet.monthlyLimit,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          panNumber: user.kyc?.panNumber,
         },
       });
     } catch (error) {
-      if (error instanceof ApiError) {
-        res.status(error.statusCode).json({
+<span class="cstat-no" title="statement not covered" >      if (error instanceof ApiError) {</span>
+<span class="cstat-no" title="statement not covered" >        res.status(error.statusCode).json({</span>
           success: false,
           error: error.message,
         });
-      } else <span class="missing-if-branch" title="else path not taken" >E</span>{
+      } else {
+<span class="cstat-no" title="statement not covered" >        console.error('Profile Update Error:', error);</span>
 <span class="cstat-no" title="statement not covered" >        res.status(500).json({</span>
           success: false,
-          error: 'Error updating wallet limits',
+          error: 'Error updating profile',
+        });
+      }
+    }
+  },
+&nbsp;
+  // Update age information
+  updateAge: <span class="fstat-no" title="function not covered" >async </span>(
+    req: AuthenticatedRequest,
+    res: Response&lt;ApiResponse&lt;any&gt;&gt;
+  ): Promise&lt;void&gt; =&gt; {
+<span class="cstat-no" title="statement not covered" >    try {</span>
+      const userId = <span class="cstat-no" title="statement not covered" >req.user.id;</span>
+      const { dateOfBirth }: KYCData = <span class="cstat-no" title="statement not covered" >req.body;</span>
+&nbsp;
+      const user = <span class="cstat-no" title="statement not covered" >await prisma.user.update({</span>
+        where: { id: userId },
+        data: {
+          kyc: {
+            update: {
+              dateOfBirth: new Date(dateOfBirth),
+            },
+          },
+        },
+        include: {
+          kyc: true,
+        },
+      });
+&nbsp;
+<span class="cstat-no" title="statement not covered" >      <span class="missing-if-branch" title="if path not taken" >I</span>if (!user.kyc) {</span>
+<span class="cstat-no" title="statement not covered" >        throw new ApiError(400, 'Please complete profile with PAN number first');</span>
+      }
+&nbsp;
+<span class="cstat-no" title="statement not covered" >      res.json({</span>
+        success: true,
+        data: {
+          dateOfBirth: user.kyc.dateOfBirth,
+        },
+      });
+    } catch (error) {
+<span class="cstat-no" title="statement not covered" >      if (error instanceof ApiError) {</span>
+<span class="cstat-no" title="statement not covered" >        res.status(error.statusCode).json({</span>
+          success: false,
+          error: error.message,
+        });
+      } else {
+<span class="cstat-no" title="statement not covered" >        console.error('Age Update Error:', error);</span>
+<span class="cstat-no" title="statement not covered" >        res.status(500).json({</span>
+          success: false,
+          error: 'Error updating age',
+        });
+      }
+    }
+  },
+&nbsp;
+  // Update financial profile
+  updateFinancialProfile: <span class="fstat-no" title="function not covered" >async </span>(
+    req: AuthenticatedRequest,
+    res: Response&lt;ApiResponse&lt;any&gt;&gt;
+  ): Promise&lt;void&gt; =&gt; {
+<span class="cstat-no" title="statement not covered" >    try {</span>
+      const userId = <span class="cstat-no" title="statement not covered" >req.user.id;</span>
+      const financialData: FinancialProfileData = <span class="cstat-no" title="statement not covered" >req.body;</span>
+&nbsp;
+      const user = <span class="cstat-no" title="statement not covered" >await prisma.user.update({</span>
+        where: { id: userId },
+        data: {
+          financialProfile: {
+            upsert: {
+              create: {
+                incomeRange: financialData.incomeRange,
+                targetSpendingPercentage: financialData.targetSpendingPercentage,
+                spendingHabit: financialData.spendingHabit,
+                targetSavingsPercentage: financialData.targetSavingsPercentage,
+                primaryGoal: financialData.primaryGoal,
+              },
+              update: {
+                incomeRange: financialData.incomeRange,
+                targetSpendingPercentage: financialData.targetSpendingPercentage,
+                spendingHabit: financialData.spendingHabit,
+                targetSavingsPercentage: financialData.targetSavingsPercentage,
+                primaryGoal: financialData.primaryGoal,
+              },
+            },
+          },
+        },
+        include: {
+          financialProfile: true,
+        },
+      });
+&nbsp;
+<span class="cstat-no" title="statement not covered" >      res.json({</span>
+        success: true,
+        data: user.financialProfile,
+      });
+    } catch (error) {
+<span class="cstat-no" title="statement not covered" >      if (error instanceof ApiError) {</span>
+<span class="cstat-no" title="statement not covered" >        res.status(error.statusCode).json({</span>
+          success: false,
+          error: error.message,
+        });
+      } else {
+<span class="cstat-no" title="statement not covered" >        console.error('Financial Profile Update Error:', error);</span>
+<span class="cstat-no" title="statement not covered" >        res.status(500).json({</span>
+          success: false,
+          error: 'Error updating financial profile',
+        });
+      }
+    }
+  },
+&nbsp;
+  // Get onboarding status
+  getStatus: <span class="fstat-no" title="function not covered" >async </span>(
+    req: AuthenticatedRequest,
+    res: Response&lt;ApiResponse&lt;any&gt;&gt;
+  ): Promise&lt;void&gt; =&gt; {
+<span class="cstat-no" title="statement not covered" >    try {</span>
+      const userId = <span class="cstat-no" title="statement not covered" >req.user.id;</span>
+&nbsp;
+      const user = <span class="cstat-no" title="statement not covered" >await prisma.user.findUnique({</span>
+        where: { id: userId },
+        include: {
+          kyc: true,
+          financialProfile: true,
+        },
+      });
+&nbsp;
+<span class="cstat-no" title="statement not covered" >      <span class="missing-if-branch" title="if path not taken" >I</span>if (!user) {</span>
+<span class="cstat-no" title="statement not covered" >        throw new ApiError(404, 'User not found');</span>
+      }
+&nbsp;
+      const status = <span class="cstat-no" title="statement not covered" >{</span>
+        profileCompleted: !!(user.firstName &amp;&amp; user.lastName &amp;&amp; user.email &amp;&amp; user.kyc?.panNumber),
+        ageVerified: !!user.kyc?.dateOfBirth,
+        financialProfileCompleted: !!user.financialProfile,
+        onboardingComplete: !!(
+          user.firstName &amp;&amp;
+          user.lastName &amp;&amp;
+          user.email &amp;&amp;
+          user.kyc?.panNumber &amp;&amp;
+          user.kyc?.dateOfBirth &amp;&amp;
+          user.financialProfile
+        ),
+      };
+&nbsp;
+<span class="cstat-no" title="statement not covered" >      res.json({</span>
+        success: true,
+        data: status,
+      });
+    } catch (error) {
+<span class="cstat-no" title="statement not covered" >      if (error instanceof ApiError) {</span>
+<span class="cstat-no" title="statement not covered" >        res.status(error.statusCode).json({</span>
+          success: false,
+          error: error.message,
+        });
+      } else {
+<span class="cstat-no" title="statement not covered" >        console.error('Status Check Error:', error);</span>
+<span class="cstat-no" title="statement not covered" >        res.status(500).json({</span>
+          success: false,
+          error: 'Error checking onboarding status',
         });
       }
     }

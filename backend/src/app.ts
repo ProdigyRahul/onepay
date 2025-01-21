@@ -7,6 +7,7 @@ import userRoutes from './routes/userRoutes';
 import authRoutes from './routes/authRoutes';
 import walletRoutes from './routes/walletRoutes';
 import { apiLimiter } from './middleware/rateLimiter';
+import onboardingRoutes from './routes/onboardingRoutes';
 
 // Initialize Prisma Client
 export const prisma = new PrismaClient();
@@ -28,6 +29,7 @@ app.use(apiLimiter);
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/wallets', walletRoutes);
+app.use('/api/onboarding', onboardingRoutes);
 
 // Error handling middleware
 app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {

@@ -67,6 +67,13 @@
   - [x] Rate limiting
   - [x] Phone number validation
   - [x] Proper error messages
+- [ ] Smart Onboarding Routes
+  - [ ] Profile completion API (name, email, PAN)
+  - [ ] Age verification API
+  - [ ] Income range API
+  - [ ] Spending habits API
+  - [ ] User goals API
+  - [ ] AI-powered recommendations
 - [x] User Routes
   - [x] Profile management
   - [x] Settings
