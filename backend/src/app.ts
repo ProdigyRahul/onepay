@@ -1,45 +1,42 @@
-import express, { Application, Request, Response, NextFunction } from 'express';
+import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import { env } from './config/env.config';
+import morgan from 'morgan';
+import { PrismaClient } from '@prisma/client';
 import userRoutes from './routes/userRoutes';
+import authRoutes from './routes/authRoutes';
+import walletRoutes from './routes/walletRoutes';
+import { apiLimiter } from './middleware/rateLimiter';
+import onboardingRoutes from './routes/onboardingRoutes';
 
-const app: Application = express();
+// Initialize Prisma Client
+export const prisma = new PrismaClient();
 
-// Security Middleware
+// Create Express app
+const app = express();
+
+// Middleware
+app.use(cors());
 app.use(helmet());
-app.use(cors({
-  origin: env.CORS_ORIGIN,
-  credentials: true
-}));
-
-// Body Parser Middleware
+app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// API Routes
-const apiPrefix = env.API_PREFIX || '/api';
-app.use(`${apiPrefix}/users`, userRoutes);
+// Apply rate limiting to all routes
+app.use(apiLimiter);
 
-// Health Check Route
-app.get('/health', (_req: Request, res: Response) => {
-  res.json({ status: 'ok', environment: env.NODE_ENV });
-});
-
-// Welcome Route
-app.get('/', (_req: Request, res: Response) => {
-  res.json({ 
-    message: 'Welcome to OnePay API',
-    version: '1.0.0',
-    environment: env.NODE_ENV
-  });
-});
+// Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/wallets', walletRoutes);
+app.use('/api/onboarding', onboardingRoutes);
 
 // Error handling middleware
-app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
+app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error(err.stack);
   res.status(500).json({
-    error: env.NODE_ENV === 'development' ? err.message : 'Internal Server Error'
+    success: false,
+    error: 'Internal server error',
   });
 });
 

@@ -5,14 +5,43 @@
  * @format
  */
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { AppNavigator } from './src/navigation/AppNavigator';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { Provider } from 'react-redux';
+import { store } from './src/store/store';
+import AppNavigator from './src/navigation/AppNavigator';
+import StorageUtils from './src/utils/storage';
+import { setCredentials } from './src/store/slices/authSlice';
 
-export default function App() {
+const App = () => {
+  useEffect(() => {
+    // Check for stored auth data on app launch
+    const initializeAuth = async () => {
+      const token = StorageUtils.getAuthToken();
+      const userData = StorageUtils.getUserData();
+      
+      if (token && userData) {
+        // Restore auth state from storage
+        store.dispatch(setCredentials({
+          user: userData,
+          token: token
+        }));
+      }
+    };
+
+    initializeAuth();
+  }, []);
+
   return (
-    <SafeAreaProvider>
-      <AppNavigator />
-    </SafeAreaProvider>
+    <Provider store={store}>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <SafeAreaProvider>
+          <AppNavigator />
+        </SafeAreaProvider>
+      </GestureHandlerRootView>
+    </Provider>
   );
-}
+};
+
+export default App;

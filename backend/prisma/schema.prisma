@@ -1,3 +1,4 @@
+// This is your Prisma schema file
 generator client {
   provider = "prisma-client-js"
 }
@@ -7,12 +8,316 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Define your models here
+// User model for basic user information
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  name      String?
-  password  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String    @id @default(uuid())
+  phoneNumber   String    @unique
+  email         String?   @unique
+  firstName     String
+  lastName      String
+  isVerified    Boolean   @default(false)
+  role          Role      @default(USER)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  isActive      Boolean   @default(true)
+
+  // Relations
+  kyc           KYC?
+  financialProfile FinancialProfile?
+  wallet        Wallet?
+  budgets       Budget[]
+  notifications Notification[]
+  learningProgress LearningProgress[]
+  gamification  GamificationProfile?
+  otps          OTP[]
+
+  @@map("users")
+}
+
+// OTP model for phone verification
+model OTP {
+  id          String    @id @default(uuid())
+  code        String
+  phoneNumber String
+  userId      String
+  expiresAt   DateTime
+  isUsed      Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  user        User      @relation(fields: [userId], references: [id])
+
+  @@map("otps")
+}
+
+// KYC model for user verification
+model KYC {
+  id            String    @id @default(uuid())
+  userId        String    @unique
+  panNumber     String    @unique
+  dateOfBirth   DateTime
+  status        KYCStatus @default(PENDING)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  // Relations
+  user          User      @relation(fields: [userId], references: [id])
+
+  @@map("kyc")
+}
+
+// Financial Profile model
+model FinancialProfile {
+  id                      String        @id @default(uuid())
+  userId                  String        @unique
+  incomeRange            IncomeRange
+  targetSpendingPercentage Float
+  spendingHabit          SpendingHabit
+  targetSavingsPercentage Float
+  primaryGoal            UserGoal
+  createdAt              DateTime      @default(now())
+  updatedAt              DateTime      @updatedAt
+
+  // Relations
+  user                    User          @relation(fields: [userId], references: [id])
+
+  @@map("financial_profiles")
+}
+
+// Wallet model for managing user's money
+model Wallet {
+  id            String    @id @default(uuid())
+  userId        String    @unique
+  balance       Float     @default(0)
+  pin           String    // Hashed PIN
+  pinAttempts   Int      @default(0)
+  isBlocked     Boolean   @default(false)
+  blockedUntil  DateTime?
+  dailyLimit    Float     @default(10000)
+  monthlyLimit  Float     @default(100000)
+  currency      String    @default("USD")
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  user          User      @relation(fields: [userId], references: [id])
+  transactions  Transaction[]
+  sentTransfers     Transfer[] @relation("SenderWallet")
+  receivedTransfers Transfer[] @relation("ReceiverWallet")
+
+  @@map("wallets")
+}
+
+// Transaction model for tracking all financial movements
+model Transaction {
+  id            String    @id @default(uuid())
+  walletId      String
+  type          TransactionType
+  amount        Float
+  balance       Float     // Balance after transaction
+  description   String?
+  status        TransactionStatus @default(PENDING)
+  metadata      Json?    // Additional transaction data
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  wallet        Wallet    @relation(fields: [walletId], references: [id])
+
+  @@map("transactions")
+}
+
+// Transfer model for wallet-to-wallet transfers
+model Transfer {
+  id            String    @id @default(uuid())
+  amount        Float
+  senderWalletId    String
+  receiverWalletId  String
+  status        TransferStatus @default(PENDING)
+  description   String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  senderWallet      Wallet    @relation("SenderWallet", fields: [senderWalletId], references: [id])
+  receiverWallet    Wallet    @relation("ReceiverWallet", fields: [receiverWalletId], references: [id])
+
+  @@map("transfers")
+}
+
+// Budget model for expense tracking
+model Budget {
+  id            String    @id @default(uuid())
+  userId        String
+  category      ExpenseCategory
+  amount        Float
+  spent         Float     @default(0)
+  period        BudgetPeriod
+  startDate     DateTime
+  endDate       DateTime
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  user          User      @relation(fields: [userId], references: [id])
+
+  @@map("budgets")
+}
+
+// Learning progress tracking
+model LearningProgress {
+  id            String    @id @default(uuid())
+  userId        String
+  moduleId      String
+  progress      Float     @default(0)
+  completed     Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  user          User      @relation(fields: [userId], references: [id])
+  module        LearningModule @relation(fields: [moduleId], references: [id])
+
+  @@map("learning_progress")
+}
+
+// Learning modules
+model LearningModule {
+  id            String    @id @default(uuid())
+  title         String
+  description   String
+  content       Json
+  points        Int       @default(0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  progress      LearningProgress[]
+
+  @@map("learning_modules")
+}
+
+// Gamification profile
+model GamificationProfile {
+  id            String    @id @default(uuid())
+  userId        String    @unique
+  level         Int       @default(1)
+  points        Int       @default(0)
+  badges        String[]  @default([])
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  user          User      @relation(fields: [userId], references: [id])
+
+  @@map("gamification_profiles")
+}
+
+// Notification model
+model Notification {
+  id            String    @id @default(uuid())
+  userId        String
+  title         String
+  message       String
+  type          NotificationType
+  read          Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  user          User      @relation(fields: [userId], references: [id])
+
+  @@map("notifications")
+}
+
+// Enums
+enum Role {
+  ADMIN
+  USER
+}
+
+enum KYCStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum TransactionType {
+  CREDIT
+  DEBIT
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum TransferStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum ExpenseCategory {
+  FOOD
+  TRANSPORT
+  SHOPPING
+  BILLS
+  ENTERTAINMENT
+  HEALTH
+  EDUCATION
+  OTHER
+}
+
+enum BudgetPeriod {
+  DAILY
+  WEEKLY
+  MONTHLY
+  YEARLY
+}
+
+enum NotificationType {
+  TRANSACTION
+  BUDGET_ALERT
+  SYSTEM
+  ACHIEVEMENT
+}
+
+enum IncomeRange {
+  RANGE_0_25000
+  RANGE_25000_100000
+  RANGE_100000_300000
+  RANGE_300000_PLUS
+}
+
+enum SpendingType {
+  SPEND_ALL
+  SPEND_NONE
+  SPEND_SOMETIMES
+}
+
+enum PurposeType {
+  PAYMENTS
+  LOANS
+  INVESTMENTS
+  TRACKING
+}
+
+enum SpendingHabit {
+  SPEND_ALL
+  SPEND_NONE
+  SPEND_SOMETIMES
+  SAVE_MOST
+}
+
+enum UserGoal {
+  EVERYDAY_PAYMENTS
+  LOANS
+  INVESTMENTS
+  TRACK_EXPENSES
 } 

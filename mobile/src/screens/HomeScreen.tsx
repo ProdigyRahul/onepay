@@ -1,24 +1,27 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { fontSize, spacing, commonStyles } from '../utils/responsive';
+import { COLORS } from '../theme/colors';
+import { TYPOGRAPHY } from '../theme/typography';
 
-export const HomeScreen = () => {
+const HomeScreen: React.FC = () => {
   return (
-    <View style={[commonStyles.container, styles.container]}>
-      <Text style={styles.text}>Hello World</Text>
+    <View style={styles.container}>
+      <Text style={styles.text}>Hello World!</Text>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#fff',
+    flex: 1,
+    backgroundColor: COLORS.backgroundPrimary,
     alignItems: 'center',
     justifyContent: 'center',
   },
   text: {
-    fontSize: fontSize(24),
-    fontWeight: 'bold',
-    color: '#000',
+    fontSize: 16,
+    color: COLORS.textPrimary,
   },
-}); 
+});
+
+export default HomeScreen; 
