@@ -15,9 +15,30 @@ const generateOTP = async (req, res) => {
             });
             return;
         }
+        const recentOTP = await prisma.oTP.findFirst({
+            where: {
+                phoneNumber,
+                createdAt: {
+                    gt: new Date(Date.now() - 60 * 1000)
+                }
+            },
+            orderBy: {
+                createdAt: 'desc'
+            }
+        });
+        if (recentOTP) {
+            const timeLeft = Math.ceil((recentOTP.createdAt.getTime() + 60000 - Date.now()) / 1000);
+            res.status(429).json({
+                success: false,
+                error: `Please wait ${timeLeft} seconds before requesting a new OTP`
+            });
+            return;
+        }
         const code = Math.floor(100000 + Math.random() * 900000).toString();
         const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
-        console.log('\x1b[33m%s\x1b[0m', '🔐 Development OTP:', code, 'for', phoneNumber);
+        if (process.env.NODE_ENV === 'development') {
+            console.log('\x1b[33m%s\x1b[0m', '🔐 Development OTP:', code, 'for', phoneNumber);
+        }
         const user = await prisma.user.upsert({
             where: { phoneNumber },
             update: {},
@@ -39,7 +60,6 @@ const generateOTP = async (req, res) => {
             success: true,
             data: {
                 phoneNumber,
-                code,
             },
         });
     }
@@ -72,6 +92,18 @@ const verifyOTP = async (req, res) => {
         await prisma.oTP.update({
             where: { id: otpRecord.id },
             data: { isUsed: true },
+        });
+        await prisma.oTP.updateMany({
+            where: {
+                phoneNumber,
+                isUsed: false,
+                id: {
+                    not: otpRecord.id
+                }
+            },
+            data: {
+                isUsed: true
+            }
         });
         const user = await prisma.user.update({
             where: { phoneNumber },

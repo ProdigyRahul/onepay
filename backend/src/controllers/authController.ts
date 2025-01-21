@@ -7,7 +7,7 @@ const prisma = new PrismaClient();
 
 export const generateOTP = async (
   req: Request<{}, {}, { phoneNumber: string }>,
-  res: Response<ApiResponse<OTPData>>
+  res: Response<ApiResponse<{ phoneNumber: string }>>
 ): Promise<void> => {
   try {
     const { phoneNumber } = req.body;
@@ -22,12 +22,36 @@ export const generateOTP = async (
       return;
     }
 
+    // Check if an OTP was generated in the last 60 seconds
+    const recentOTP = await prisma.oTP.findFirst({
+      where: {
+        phoneNumber,
+        createdAt: {
+          gt: new Date(Date.now() - 60 * 1000) // Last 60 seconds
+        }
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    });
+
+    if (recentOTP) {
+      const timeLeft = Math.ceil((recentOTP.createdAt.getTime() + 60000 - Date.now()) / 1000);
+      res.status(429).json({
+        success: false,
+        error: `Please wait ${timeLeft} seconds before requesting a new OTP`
+      });
+      return;
+    }
+
     // Generate a 6-digit OTP
     const code = Math.floor(100000 + Math.random() * 900000).toString();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
-    // Development only: Log OTP
-    console.log('\x1b[33m%s\x1b[0m', '🔐 Development OTP:', code, 'for', phoneNumber);
+    // Development only: Log OTP to console
+    if (process.env.NODE_ENV === 'development') {
+      console.log('\x1b[33m%s\x1b[0m', '🔐 Development OTP:', code, 'for', phoneNumber);
+    }
 
     // Find or create user
     const user = await prisma.user.upsert({
@@ -50,13 +74,11 @@ export const generateOTP = async (
       },
     });
 
-    // In production, send OTP via SMS
-    // For development, return it in response
+    // Only return phoneNumber in response
     res.json({
       success: true,
       data: {
         phoneNumber,
-        code, // Remove this in production
       },
     });
   } catch (error) {
@@ -101,6 +123,20 @@ export const verifyOTP = async (
     await prisma.oTP.update({
       where: { id: otpRecord.id },
       data: { isUsed: true },
+    });
+
+    // Mark all other unused OTPs for this phone number as used
+    await prisma.oTP.updateMany({
+      where: {
+        phoneNumber,
+        isUsed: false,
+        id: {
+          not: otpRecord.id
+        }
+      },
+      data: {
+        isUsed: true
+      }
     });
 
     // Update user verification status
