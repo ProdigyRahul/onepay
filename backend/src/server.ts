@@ -1,26 +1,30 @@
 import 'dotenv/config';
-import { env } from './config/env.config';
 import app from './app';
+import { prisma } from './app';
 
-process.on('uncaughtException', (error) => {
-  console.error('Uncaught Exception:', error);
-  process.exit(1);
-});
+const PORT = process.env.PORT || 3000;
 
-const server = app.listen(env.PORT, () => {
-  console.log(`
-🚀 Server ready at: http://localhost:${env.PORT}
-⭐️ Environment: ${env.NODE_ENV}
-  `);
-});
+const startServer = async () => {
+  try {
+    // Test database connection
+    await prisma.$connect();
+    console.log('✅ Connected to database successfully');
 
-process.on('unhandledRejection', (error) => {
-  console.error('Unhandled Rejection:', error);
-  if (server) {
-    server.close(() => {
-      process.exit(1);
+    // Start server
+    app.listen(PORT, () => {
+      console.log(`🚀 Server running on port ${PORT}`);
     });
-  } else {
+  } catch (error) {
+    console.error('❌ Error starting server:', error);
     process.exit(1);
   }
+};
+
+// Handle graceful shutdown
+process.on('SIGTERM', async () => {
+  console.log('SIGTERM signal received: closing HTTP server');
+  await prisma.$disconnect();
+  process.exit(0);
 });
+
+startServer();

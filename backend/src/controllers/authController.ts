@@ -1,133 +1,135 @@
 import { Request, Response } from 'express';
-import { PrismaClient, Prisma, User } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
+import { generateToken } from '../utils/jwt';
+import { OTPData, ApiResponse, SafeUser } from '../types';
 
 const prisma = new PrismaClient();
 
-// Validation functions
-const validatePhoneNumber = (phoneNumber: string): boolean => {
-  return /^\+?[1-9]\d{1,14}$/.test(phoneNumber);
-};
-
-const validateOTP = (otp: string): boolean => {
-  return /^\d{6}$/.test(otp);
-};
-
-type SafeUser = {
-  id: string;
-  phoneNumber: string;
-  isVerified: boolean;
-};
-
-const sanitizeUser = (user: User): SafeUser => ({
-  id: user.id,
-  phoneNumber: user.phoneNumber,
-  isVerified: user.isVerified
-});
-
-export const generateOTP = async (req: Request, res: Response) => {
+export const generateOTP = async (
+  req: Request<{}, {}, { phoneNumber: string }>,
+  res: Response<ApiResponse<OTPData>>
+): Promise<void> => {
   try {
     const { phoneNumber } = req.body;
 
-    if (!phoneNumber || !validatePhoneNumber(phoneNumber)) {
-      return res.status(400).json({ error: 'Invalid phone number format' });
+    // Validate phone number format (must start with + and contain only digits)
+    const phoneRegex = /^\+\d{10,15}$/;
+    if (!phoneRegex.test(phoneNumber)) {
+      res.status(400).json({ 
+        success: false, 
+        error: 'Invalid phone number format. Must start with + and contain 10-15 digits' 
+      });
+      return;
     }
 
     // Generate a 6-digit OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes expiry
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
     // Find or create user
     const user = await prisma.user.upsert({
       where: { phoneNumber },
       update: {},
       create: {
-        phoneNumber
-      }
+        phoneNumber,
+        firstName: '',
+        lastName: '',
+      },
     });
 
     // Create OTP record
-    await prisma.otp.create({
+    await prisma.oTP.create({
       data: {
-        code: otp,
+        code,
         phoneNumber,
         userId: user.id,
-        expiresAt
-      }
+        expiresAt,
+      },
     });
 
-    // In production, you would send this OTP via SMS
-    // For development, we'll return it in response
-    res.json({ 
-      message: 'OTP sent successfully',
-      otp: process.env.NODE_ENV === 'development' ? otp : undefined 
+    // In production, send OTP via SMS
+    // For development, return it in response
+    res.json({
+      success: true,
+      data: {
+        phoneNumber,
+        code, // Remove this in production
+      },
     });
   } catch (error) {
     console.error('Generate OTP Error:', error);
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      res.status(400).json({ error: 'Database operation failed' });
-    } else {
-      res.status(400).json({ error: 'Failed to generate OTP' });
-    }
+    res.status(500).json({ success: false, error: 'Error generating OTP' });
   }
 };
 
-export const verifyOTP = async (req: Request, res: Response) => {
+interface VerifyOTPResponse {
+  token: string;
+  user: SafeUser;
+}
+
+export const verifyOTP = async (
+  req: Request<{}, {}, OTPData>,
+  res: Response<ApiResponse<VerifyOTPResponse>>
+): Promise<void> => {
   try {
-    const { phoneNumber, otp } = req.body;
+    const { phoneNumber, code } = req.body;
 
-    if (!phoneNumber || !validatePhoneNumber(phoneNumber)) {
-      return res.status(400).json({ error: 'Invalid phone number format' });
-    }
-
-    if (!otp || !validateOTP(otp)) {
-      return res.status(400).json({ error: 'Invalid OTP format' });
-    }
-
-    // Find the latest unused OTP for this phone number
-    const otpRecord = await prisma.otp.findFirst({
+    // Find the latest unused OTP for the phone number
+    const otpRecord = await prisma.oTP.findFirst({
       where: {
         phoneNumber,
-        code: otp,
+        code,
         isUsed: false,
         expiresAt: {
-          gt: new Date()
-        }
+          gt: new Date(),
+        },
       },
       orderBy: {
-        createdAt: 'desc'
-      }
+        createdAt: 'desc',
+      },
     });
 
     if (!otpRecord) {
-      return res.status(400).json({ error: 'Invalid or expired OTP' });
+      res.status(400).json({ success: false, error: 'Invalid or expired OTP' });
+      return;
     }
 
     // Mark OTP as used
-    await prisma.otp.update({
+    await prisma.oTP.update({
       where: { id: otpRecord.id },
-      data: { isUsed: true }
+      data: { isUsed: true },
     });
 
-    // Update user verification status and return user data
-    const updatedUser = await prisma.user.update({
+    // Update user verification status
+    const user = await prisma.user.update({
       where: { phoneNumber },
       data: {
         isVerified: true,
-        lastLoginAt: new Date(),
-        otpValidUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days
-      }
+      },
     });
 
-    res.json({ 
-      message: 'OTP verified successfully',
-      user: sanitizeUser(updatedUser)
+    // Generate JWT token
+    const token = generateToken({
+      userId: user.id,
+      role: user.role,
+    });
+
+    res.json({
+      success: true,
+      data: {
+        token,
+        user: {
+          id: user.id,
+          phoneNumber: user.phoneNumber,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          isVerified: user.isVerified,
+          role: user.role,
+        },
+      },
     });
   } catch (error) {
     console.error('Verify OTP Error:', error);
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      res.status(400).json({ error: 'Database operation failed' });
-    } else {
-      res.status(400).json({ error: 'Failed to verify OTP' });
-    }
+    res.status(500).json({ success: false, error: 'Error verifying OTP' });
   }
 }; 
