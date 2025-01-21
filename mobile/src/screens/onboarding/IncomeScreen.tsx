@@ -17,72 +17,109 @@ import { FONTS, FONT_SIZES } from '../../theme/typography';
 import { wp, hp } from '../../utils/responsive';
 import { RootStackParamList } from '../../navigation/types';
 import { useAppDispatch, useAppSelector } from '../../store/store';
-import { setPurpose, setLoading, setError } from '../../store/slices/onboardingSlice';
-import { onboardingApi, UserGoal, IncomeRange, SpendingHabit } from '../../services/api/onboarding';
+import { setIncome, setLoading, setError } from '../../store/slices/onboardingSlice';
+import { onboardingApi, IncomeRange, SpendingHabit, UserGoal } from '../../services/api/onboarding';
+import axios from 'axios';
 
-type PurposeScreenNavigationProp = NativeStackNavigationProp<
+type IncomeScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
-  'OnboardingPurpose'
+  'OnboardingIncome'
 >;
 
-interface PurposeOption {
-  id: UserGoal;
+interface IncomeOption {
+  id: IncomeRange;
   title: string;
   description: string;
   icon: string;
 }
 
-const purposeOptions: PurposeOption[] = [
+const formatIncomeRange = (range: IncomeRange): string => {
+  switch (range) {
+    case IncomeRange.RANGE_0_25000:
+      return '₹0 - ₹25,000';
+    case IncomeRange.RANGE_25000_100000:
+      return '₹25,000 - ₹1,00,000';
+    case IncomeRange.RANGE_100000_300000:
+      return '₹1,00,000 - ₹3,00,000';
+    case IncomeRange.RANGE_300000_PLUS:
+      return '₹3,00,000+';
+    default:
+      return '';
+  }
+};
+
+const incomeOptions: IncomeOption[] = [
   {
-    id: UserGoal.EVERYDAY_PAYMENTS,
-    title: 'Everyday payments',
-    description: 'UPI, Credit Card, Recharges, Bills',
-    icon: 'bank-transfer',
+    id: IncomeRange.RANGE_0_25000,
+    title: formatIncomeRange(IncomeRange.RANGE_0_25000),
+    description: 'Entry level income',
+    icon: 'currency-inr',
   },
   {
-    id: UserGoal.LOANS,
-    title: 'Loans',
-    description: 'ZIP-EMI, Credit Score',
-    icon: 'cash-fast',
+    id: IncomeRange.RANGE_25000_100000,
+    title: formatIncomeRange(IncomeRange.RANGE_25000_100000),
+    description: 'Mid level income',
+    icon: 'currency-inr',
   },
   {
-    id: UserGoal.INVESTMENTS,
-    title: 'Invest & grow my money',
-    description: 'FD, Xtra, Gold, Mutual Funds',
-    icon: 'trending-up',
+    id: IncomeRange.RANGE_100000_300000,
+    title: formatIncomeRange(IncomeRange.RANGE_100000_300000),
+    description: 'High income',
+    icon: 'currency-inr',
   },
   {
-    id: UserGoal.TRACK_EXPENSES,
-    title: 'Track my bank spends',
-    description: 'with OnePay',
-    icon: 'chart-timeline-variant',
+    id: IncomeRange.RANGE_300000_PLUS,
+    title: formatIncomeRange(IncomeRange.RANGE_300000_PLUS),
+    description: 'Premium income',
+    icon: 'currency-inr',
   },
 ];
 
-const PurposeScreen = () => {
-  const navigation = useNavigation<PurposeScreenNavigationProp>();
+const IncomeScreen = () => {
+  const navigation = useNavigation<IncomeScreenNavigationProp>();
   const dispatch = useAppDispatch();
   const { isLoading } = useAppSelector((state) => state.onboarding);
 
-  const [selectedPurpose, setSelectedPurpose] = useState<UserGoal | null>(null);
+  const [selectedIncome, setSelectedIncome] = useState<IncomeRange | null>(null);
 
-  const handlePurposeSelect = (purpose: UserGoal) => {
-    setSelectedPurpose(purpose);
+  const handleIncomeSelect = (income: IncomeRange) => {
+    setSelectedIncome(income);
   };
 
   const handleSubmit = async () => {
-    if (!selectedPurpose) {
-      Alert.alert('Error', 'Please select your purpose');
+    if (!selectedIncome) {
+      Alert.alert('Error', 'Please select your income range');
       return;
     }
 
     try {
       dispatch(setLoading(true));
-      await onboardingApi.updatePrimaryGoal(selectedPurpose);
-      dispatch(setPurpose(selectedPurpose));
-      navigation.navigate('OnboardingIncome');
+      console.log('Submitting income range:', {
+        selectedIncome,
+        type: typeof selectedIncome,
+        stringified: JSON.stringify({ incomeRange: selectedIncome })
+      });
+      
+      const response = await onboardingApi.updateIncomeRange(selectedIncome);
+      console.log('Income range update response:', response);
+      
+      dispatch(setIncome(selectedIncome));
+      navigation.navigate('OnboardingSpending');
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to update purpose';
+      console.error('Income range update error:', err);
+      if (axios.isAxiosError(err)) {
+        console.error('Network Error Details:', {
+          status: err.response?.status,
+          data: err.response?.data,
+          config: {
+            url: err.config?.url,
+            method: err.config?.method,
+            data: err.config?.data,
+            headers: err.config?.headers
+          }
+        });
+      }
+      const errorMessage = err instanceof Error ? err.message : 'Failed to update income range';
       dispatch(setError(errorMessage));
       Alert.alert('Error', errorMessage);
     } finally {
@@ -98,21 +135,21 @@ const PurposeScreen = () => {
         style={styles.content}
         showsVerticalScrollIndicator={false}>
         <View style={styles.topSection}>
-          <Text style={styles.title}>What brings you to <Text style={styles.titleHighlight}>OnePay</Text>?</Text>
+          <Text style={styles.title}>What's your <Text style={styles.titleHighlight}>monthly income</Text>?</Text>
           <Text style={styles.subtitle}>
-            Select your primary financial goal, and we'll customize your experience accordingly
+            This helps us provide personalized financial recommendations and budgeting insights
           </Text>
         </View>
 
         <View style={styles.optionsContainer}>
-          {purposeOptions.map((option) => (
+          {incomeOptions.map((option) => (
             <TouchableOpacity
               key={option.id}
               style={[
                 styles.optionCard,
-                selectedPurpose === option.id && styles.optionCardSelected,
+                selectedIncome === option.id && styles.optionCardSelected,
               ]}
-              onPress={() => handlePurposeSelect(option.id)}>
+              onPress={() => handleIncomeSelect(option.id)}>
               <View style={styles.optionContent}>
                 <View style={styles.optionIconContainer}>
                   <MaterialCommunityIcons
@@ -126,7 +163,7 @@ const PurposeScreen = () => {
                   <Text style={styles.optionDescription}>{option.description}</Text>
                 </View>
               </View>
-              {selectedPurpose === option.id && (
+              {selectedIncome === option.id && (
                 <MaterialCommunityIcons
                   name="check-circle"
                   size={wp(6)}
@@ -141,16 +178,16 @@ const PurposeScreen = () => {
           <TouchableOpacity
             style={[
               styles.button,
-              selectedPurpose && styles.buttonActive
+              selectedIncome && styles.buttonActive
             ]}
             onPress={handleSubmit}
-            disabled={!selectedPurpose || isLoading}>
+            disabled={!selectedIncome || isLoading}>
             {isLoading ? (
               <ActivityIndicator color={COLORS.white} size="small" />
             ) : (
               <Text style={[
                 styles.buttonText,
-                selectedPurpose && styles.buttonTextActive
+                selectedIncome && styles.buttonTextActive
               ]}>
                 Continue
               </Text>
@@ -264,4 +301,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default PurposeScreen; 
+export default IncomeScreen; 

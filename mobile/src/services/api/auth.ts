@@ -1,35 +1,28 @@
-import axios from 'axios';
-import { API_CONFIG } from '../../config/api';
+import { apiClient } from '../../api/client';
 
-const api = axios.create({
-  baseURL: API_CONFIG.BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-export interface User {
+interface User {
   id: string;
   phoneNumber: string;
+  firstName: string;
+  lastName: string;
   isVerified: boolean;
+  role: string;
 }
 
-export interface GenerateOTPResponse {
-  message: string;
-  otp?: string; // Only in development
+interface OTPVerificationResponse {
+  success: boolean;
+  data: {
+    token: string;
+    user: User;
+  };
 }
 
-export interface VerifyOTPResponse {
-  message: string;
-  user: User;
-}
-
-export const generateOTP = async (phoneNumber: string): Promise<GenerateOTPResponse> => {
-  const response = await api.post('/auth/generate-otp', { phoneNumber });
+export const verifyOTP = async (data: { phoneNumber: string; code: string }): Promise<OTPVerificationResponse> => {
+  const response = await apiClient.post('/auth/verify-otp', data);
   return response.data;
 };
 
-export const verifyOTP = async (phoneNumber: string, otp: string): Promise<VerifyOTPResponse> => {
-  const response = await api.post('/auth/verify-otp', { phoneNumber, otp });
+export const generateOTP = async (phoneNumber: string) => {
+  const response = await apiClient.post('/auth/generate-otp', { phoneNumber });
   return response.data;
 }; 

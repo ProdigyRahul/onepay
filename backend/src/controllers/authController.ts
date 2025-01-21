@@ -26,6 +26,9 @@ export const generateOTP = async (
     const code = Math.floor(100000 + Math.random() * 900000).toString();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
+    // Development only: Log OTP
+    console.log('\x1b[33m%s\x1b[0m', '🔐 Development OTP:', code, 'for', phoneNumber);
+
     // Find or create user
     const user = await prisma.user.upsert({
       where: { phoneNumber },

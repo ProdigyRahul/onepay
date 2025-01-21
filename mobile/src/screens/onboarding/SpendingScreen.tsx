@@ -17,72 +17,106 @@ import { FONTS, FONT_SIZES } from '../../theme/typography';
 import { wp, hp } from '../../utils/responsive';
 import { RootStackParamList } from '../../navigation/types';
 import { useAppDispatch, useAppSelector } from '../../store/store';
-import { setPurpose, setLoading, setError } from '../../store/slices/onboardingSlice';
-import { onboardingApi, UserGoal, IncomeRange, SpendingHabit } from '../../services/api/onboarding';
+import { setSpending, setLoading, setError } from '../../store/slices/onboardingSlice';
+import { onboardingApi, SpendingHabit } from '../../services/api/onboarding';
 
-type PurposeScreenNavigationProp = NativeStackNavigationProp<
+type SpendingScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
-  'OnboardingPurpose'
+  'OnboardingSpending'
 >;
 
-interface PurposeOption {
-  id: UserGoal;
+interface SpendingOption {
+  id: SpendingHabit;
   title: string;
   description: string;
   icon: string;
 }
 
-const purposeOptions: PurposeOption[] = [
+const spendingOptions: SpendingOption[] = [
   {
-    id: UserGoal.EVERYDAY_PAYMENTS,
-    title: 'Everyday payments',
-    description: 'UPI, Credit Card, Recharges, Bills',
-    icon: 'bank-transfer',
+    id: SpendingHabit.SPEND_ALL,
+    title: 'Big Spender',
+    description: 'I spend most of my income on lifestyle and purchases',
+    icon: 'shopping',
   },
   {
-    id: UserGoal.LOANS,
-    title: 'Loans',
-    description: 'ZIP-EMI, Credit Score',
-    icon: 'cash-fast',
+    id: SpendingHabit.SPEND_SOMETIMES,
+    title: 'Balanced Spender',
+    description: 'I maintain a balance between spending and saving',
+    icon: 'scale-balance',
   },
   {
-    id: UserGoal.INVESTMENTS,
-    title: 'Invest & grow my money',
-    description: 'FD, Xtra, Gold, Mutual Funds',
-    icon: 'trending-up',
+    id: SpendingHabit.SAVE_MOST,
+    title: 'Smart Saver',
+    description: 'I prefer saving and investing over spending',
+    icon: 'piggy-bank',
   },
   {
-    id: UserGoal.TRACK_EXPENSES,
-    title: 'Track my bank spends',
-    description: 'with OnePay',
-    icon: 'chart-timeline-variant',
+    id: SpendingHabit.SPEND_NONE,
+    title: 'Super Saver',
+    description: 'I save almost everything and spend minimally',
+    icon: 'bank',
   },
 ];
 
-const PurposeScreen = () => {
-  const navigation = useNavigation<PurposeScreenNavigationProp>();
+const SpendingScreen = () => {
+  const navigation = useNavigation<SpendingScreenNavigationProp>();
   const dispatch = useAppDispatch();
   const { isLoading } = useAppSelector((state) => state.onboarding);
 
-  const [selectedPurpose, setSelectedPurpose] = useState<UserGoal | null>(null);
+  const [selectedSpending, setSelectedSpending] = useState<SpendingHabit | null>(null);
 
-  const handlePurposeSelect = (purpose: UserGoal) => {
-    setSelectedPurpose(purpose);
+  const handleSpendingSelect = (spending: SpendingHabit) => {
+    setSelectedSpending(spending);
   };
 
   const handleSubmit = async () => {
-    if (!selectedPurpose) {
-      Alert.alert('Error', 'Please select your purpose');
+    if (!selectedSpending) {
+      Alert.alert('Error', 'Please select your spending habit');
       return;
     }
 
     try {
       dispatch(setLoading(true));
-      await onboardingApi.updatePrimaryGoal(selectedPurpose);
-      dispatch(setPurpose(selectedPurpose));
-      navigation.navigate('OnboardingIncome');
+      console.log('Updating spending habits...');
+      
+      const response = await onboardingApi.updateSpendingHabits({
+        spendingHabit: selectedSpending,
+        targetSpendingPercentage: 0,
+      });
+      
+      if (!response.success) {
+        throw new Error('Failed to update spending habits');
+      }
+
+      dispatch(setSpending({ habit: selectedSpending, percentage: 0 }));
+      console.log('Spending habits updated successfully');
+      
+      // Small delay to ensure backend state is updated
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Get final onboarding status
+      console.log('Checking onboarding status...');
+      const statusResponse = await onboardingApi.getOnboardingStatus();
+      console.log('Onboarding status response:', statusResponse);
+
+      if (!statusResponse.success) {
+        throw new Error('Failed to get onboarding status');
+      }
+
+      if (statusResponse.data.spendingHabitsSet && statusResponse.data.onboardingComplete) {
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'Home' }],
+        });
+      } else {
+        console.error('Onboarding not complete:', statusResponse.data);
+        Alert.alert('Error', 'Failed to complete onboarding. Please try again.');
+      }
+      
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to update purpose';
+      console.error('Error in handleSubmit:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to update spending habits';
       dispatch(setError(errorMessage));
       Alert.alert('Error', errorMessage);
     } finally {
@@ -94,39 +128,40 @@ const PurposeScreen = () => {
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={COLORS.white} />
       
-      <ScrollView 
-        style={styles.content}
-        showsVerticalScrollIndicator={false}>
+      <View style={styles.content}>
         <View style={styles.topSection}>
-          <Text style={styles.title}>What brings you to <Text style={styles.titleHighlight}>OnePay</Text>?</Text>
+          <Text style={styles.title}>What's your <Text style={styles.titleHighlight}>spending style</Text>?</Text>
           <Text style={styles.subtitle}>
-            Select your primary financial goal, and we'll customize your experience accordingly
+            Understanding your spending habits helps us create a personalized financial plan
           </Text>
         </View>
 
         <View style={styles.optionsContainer}>
-          {purposeOptions.map((option) => (
+          {spendingOptions.map((option) => (
             <TouchableOpacity
               key={option.id}
               style={[
                 styles.optionCard,
-                selectedPurpose === option.id && styles.optionCardSelected,
+                selectedSpending === option.id && styles.optionCardSelected,
               ]}
-              onPress={() => handlePurposeSelect(option.id)}>
+              onPress={() => handleSpendingSelect(option.id)}>
               <View style={styles.optionContent}>
-                <View style={styles.optionIconContainer}>
+                <View style={[
+                  styles.optionIconContainer,
+                  selectedSpending === option.id && styles.optionIconContainerSelected,
+                ]}>
                   <MaterialCommunityIcons
                     name={option.icon}
                     size={wp(6)}
-                    color={COLORS.primary}
+                    color={selectedSpending === option.id ? COLORS.white : COLORS.primary}
                   />
                 </View>
-                <View>
+                <View style={styles.optionTextContainer}>
                   <Text style={styles.optionTitle}>{option.title}</Text>
                   <Text style={styles.optionDescription}>{option.description}</Text>
                 </View>
               </View>
-              {selectedPurpose === option.id && (
+              {selectedSpending === option.id && (
                 <MaterialCommunityIcons
                   name="check-circle"
                   size={wp(6)}
@@ -141,23 +176,23 @@ const PurposeScreen = () => {
           <TouchableOpacity
             style={[
               styles.button,
-              selectedPurpose && styles.buttonActive
+              selectedSpending && styles.buttonActive
             ]}
             onPress={handleSubmit}
-            disabled={!selectedPurpose || isLoading}>
+            disabled={!selectedSpending || isLoading}>
             {isLoading ? (
               <ActivityIndicator color={COLORS.white} size="small" />
             ) : (
               <Text style={[
                 styles.buttonText,
-                selectedPurpose && styles.buttonTextActive
+                selectedSpending && styles.buttonTextActive
               ]}>
                 Continue
               </Text>
             )}
           </TouchableOpacity>
         </View>
-      </ScrollView>
+      </View>
     </View>
   );
 };
@@ -169,17 +204,18 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+    justifyContent: 'space-between',
+    paddingTop: hp(3),
   },
   topSection: {
-    paddingTop: hp(4),
     paddingHorizontal: wp(6),
-    marginBottom: hp(6),
+    marginBottom: hp(3),
   },
   title: {
     fontFamily: FONTS.regular,
     fontSize: FONT_SIZES.xxxl,
     color: COLORS.black,
-    marginBottom: hp(2),
+    marginBottom: hp(1),
   },
   titleHighlight: {
     fontFamily: FONTS.bold,
@@ -189,17 +225,17 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.regular,
     fontSize: FONT_SIZES.md,
     color: COLORS.textSecondary,
-    lineHeight: hp(3),
+    lineHeight: hp(2.5),
   },
   optionsContainer: {
     paddingHorizontal: wp(6),
-    gap: hp(2),
+    gap: hp(1.5),
   },
   optionCard: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: wp(4),
+    padding: wp(3.5),
     backgroundColor: COLORS.white,
     borderRadius: wp(4),
     borderWidth: 1.5,
@@ -214,22 +250,28 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: wp(4),
+    gap: wp(3),
   },
   optionIconContainer: {
-    width: wp(12),
-    height: wp(12),
-    borderRadius: wp(6),
+    width: wp(10),
+    height: wp(10),
+    borderRadius: wp(5),
     backgroundColor: COLORS.white,
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 2,
   },
+  optionIconContainerSelected: {
+    backgroundColor: COLORS.primary,
+  },
+  optionTextContainer: {
+    flex: 1,
+  },
   optionTitle: {
     fontFamily: FONTS.medium,
     fontSize: FONT_SIZES.md,
     color: COLORS.black,
-    marginBottom: hp(0.5),
+    marginBottom: hp(0.3),
   },
   optionDescription: {
     fontFamily: FONTS.regular,
@@ -238,8 +280,7 @@ const styles = StyleSheet.create({
   },
   bottomSection: {
     paddingHorizontal: wp(6),
-    paddingVertical: hp(4),
-    marginTop: hp(4),
+    paddingBottom: hp(4),
   },
   button: {
     width: '100%',
@@ -264,4 +305,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default PurposeScreen; 
+export default SpendingScreen; 

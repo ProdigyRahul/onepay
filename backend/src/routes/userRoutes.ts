@@ -9,25 +9,30 @@ import {
 
 const router = express.Router();
 
-// Protected routes
+// All routes require authentication
 router.use(authenticate as RequestHandler);
 
 // Get user profile
 router.get('/profile', userController.getProfile as RequestHandler);
 
 // Update user profile
-router.put(
+router.patch(
   '/profile',
-  validate(updateProfileValidation) as RequestHandler,
+  validate(updateProfileValidation),
   userController.updateProfile as RequestHandler
 );
 
-// KYC routes
+// Update KYC information
 router.post(
   '/kyc',
-  validate(updateKYCValidation) as RequestHandler,
+  validate(updateKYCValidation),
   userController.updateKYC as RequestHandler
 );
-router.get('/kyc', userController.getKYCStatus as RequestHandler);
+
+// Get KYC status
+router.get(
+  '/kyc',
+  userController.getKYCStatus as RequestHandler
+);
 
 export default router; 

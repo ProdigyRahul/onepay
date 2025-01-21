@@ -1,45 +1,27 @@
-import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, Animated } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, StyleSheet, Animated, Image } from 'react-native';
 import { COLORS } from '../theme/colors';
-import { fontSize, wp } from '../utils/responsive';
+import { hp, wp } from '../utils/responsive';
 
 const SplashScreen = () => {
-  // Animation values
-  const fadeAnim = new Animated.Value(0);
-  const slideAnim = new Animated.Value(-100);
+  const fadeAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    // Run animations in sequence
-    Animated.sequence([
-      // First fade in and slide from left
-      Animated.parallel([
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 1000,
-          useNativeDriver: true,
-        }),
-        Animated.spring(slideAnim, {
-          toValue: 0,
-          tension: 20,
-          friction: 7,
-          useNativeDriver: true,
-        }),
-      ]),
-    ]).start();
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 1000,
+      useNativeDriver: true,
+    }).start();
   }, []);
 
   return (
     <View style={styles.container}>
-      <Animated.View
-        style={[
-          styles.textContainer,
-          {
-            opacity: fadeAnim,
-            transform: [{ translateX: slideAnim }],
-          },
-        ]}>
-        <Text style={styles.textOne}>One</Text>
-        <Text style={styles.textPay}>Pay</Text>
+      <Animated.View style={[styles.logoContainer, { opacity: fadeAnim }]}>
+        <Image 
+          source={require('../assets/images/logo.png')}
+          style={styles.logo}
+          resizeMode="contain"
+        />
       </Animated.View>
     </View>
   );
@@ -49,24 +31,18 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.primary,
-    alignItems: 'center',
     justifyContent: 'center',
-  },
-  textContainer: {
-    flexDirection: 'row',
     alignItems: 'center',
   },
-  textOne: {
-    fontSize: fontSize(48),
-    fontWeight: '300', // Light weight for premium feel
-    color: COLORS.white,
-    letterSpacing: 2,
+  logoContainer: {
+    width: wp(80),
+    height: hp(20),
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  textPay: {
-    fontSize: fontSize(48),
-    fontWeight: 'bold',
-    color: COLORS.white,
-    letterSpacing: 1,
+  logo: {
+    width: '100%',
+    height: '100%',
   },
 });
 

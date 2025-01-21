@@ -8,6 +8,9 @@ import { COLORS } from '../../theme/colors';
 import { FONTS, FONT_SIZES } from '../../theme/typography';
 import { wp, hp } from '../../utils/responsive';
 import { RootStackParamList } from '../../navigation/types';
+import { useAppDispatch, useAppSelector } from '../../store/store';
+import { setCredentials, setLoading, setError } from '../../store/slices/authSlice';
+import { onboardingApi } from '../../services/api/onboarding';
 
 type OTPScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'OTP'>;
 type OTPScreenRouteProp = RouteProp<RootStackParamList, 'OTP'>;
@@ -17,17 +20,12 @@ const OTP_LENGTH = 6;
 const OTPScreen = () => {
   const navigation = useNavigation<OTPScreenNavigationProp>();
   const route = useRoute<OTPScreenRouteProp>();
-  const { phoneNumber, otpFromResponse } = route.params;
+  const dispatch = useAppDispatch();
+  const { isLoading } = useAppSelector((state) => state.auth);
 
+  const { phoneNumber } = route.params;
   const [otp, setOtp] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   const [timer, setTimer] = useState(60);
-
-  useEffect(() => {
-    if (__DEV__ && otpFromResponse) {
-      setOtp(otpFromResponse);
-    }
-  }, [otpFromResponse]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -45,23 +43,67 @@ const OTPScreen = () => {
     }
   }, [otp]);
 
-  const handleVerify = async () => {
-    if (otp.length !== OTP_LENGTH) return;
+  const handleVerifyOTP = async () => {
+    if (!otp || otp.length !== 6) {
+      Alert.alert('Error', 'Please enter a valid 6-digit OTP');
+      return;
+    }
 
     try {
-      setIsLoading(true);
-      await verifyOTP(phoneNumber, otp);
-      navigation.reset({
-        index: 0,
-        routes: [{ name: 'NotificationsPermission' }],
-      });
-    } catch (error: any) {
-      Alert.alert(
-        'Error',
-        error.response?.data?.error || 'Failed to verify OTP'
-      );
+      dispatch(setLoading(true));
+      const response = await verifyOTP({ phoneNumber, code: otp });
+      
+      if (response.success && response.data) {
+        dispatch(setCredentials({
+          user: response.data.user,
+          token: response.data.token,
+        }));
+        
+        // Check onboarding status
+        const statusResponse = await onboardingApi.getOnboardingStatus();
+        const status = statusResponse.data;
+        
+        if (status.onboardingComplete) {
+          navigation.reset({
+            index: 0,
+            routes: [{ name: 'Home' }],
+          });
+        } else {
+          // Navigate to the appropriate onboarding screen
+          if (!status.profileCompleted) {
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'NotificationsPermission' }],
+            });
+          } else if (!status.ageVerified) {
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'OnboardingAge' }],
+            });
+          } else if (!status.primaryGoalSet) {
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'OnboardingPurpose' }],
+            });
+          } else if (!status.incomeRangeSet) {
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'OnboardingIncome' }],
+            });
+          } else {
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'OnboardingSpending' }],
+            });
+          }
+        }
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to verify OTP';
+      dispatch(setError(errorMessage));
+      Alert.alert('Error', errorMessage);
     } finally {
-      setIsLoading(false);
+      dispatch(setLoading(false));
     }
   };
 
@@ -89,8 +131,7 @@ const OTPScreen = () => {
         <View style={styles.topSection}>
           <Text style={styles.title}>Enter verification code</Text>
           <Text style={styles.subtitle}>
-            We've sent a 6-digit code to{'\n'}
-            <Text style={styles.phoneNumber}>{phoneNumber}</Text>
+            We've sent a 6-digit code to {phoneNumber}
           </Text>
         </View>
 
@@ -112,18 +153,11 @@ const OTPScreen = () => {
 
         <View style={styles.bottomSection}>
           <TouchableOpacity
-            style={[
-              styles.verifyButton,
-              otp.length === OTP_LENGTH && styles.verifyButtonActive,
-            ]}
-            disabled={otp.length !== OTP_LENGTH || isLoading}
-            onPress={handleVerify}>
-            <Text
-              style={[
-                styles.verifyText,
-                otp.length === OTP_LENGTH && styles.verifyTextActive,
-              ]}>
-              {isLoading ? 'Verifying...' : 'Verify & Proceed'}
+            style={[styles.button, isLoading && styles.buttonDisabled]}
+            onPress={handleVerifyOTP}
+            disabled={isLoading}>
+            <Text style={styles.buttonText}>
+              {isLoading ? 'Verifying...' : 'Verify'}
             </Text>
           </TouchableOpacity>
 
@@ -150,20 +184,15 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: FONTS.bold,
-    fontSize: FONT_SIZES.xxl,
-    color: COLORS.black,
-    marginBottom: hp(1),
+    fontSize: FONT_SIZES.xxxl,
+    color: COLORS.primary,
+    marginBottom: hp(2),
   },
   subtitle: {
     fontFamily: FONTS.regular,
     fontSize: FONT_SIZES.md,
     color: COLORS.textSecondary,
     lineHeight: hp(3),
-  },
-  phoneNumber: {
-    fontFamily: FONTS.medium,
-    fontSize: FONT_SIZES.md,
-    color: COLORS.black,
   },
   otpSection: {
     paddingHorizontal: wp(6),
@@ -217,28 +246,24 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'flex-end',
     paddingHorizontal: wp(6),
-    paddingBottom: hp(4),
   },
-  verifyButton: {
+  button: {
     width: '100%',
     height: hp(6),
-    backgroundColor: COLORS.surface,
+    backgroundColor: COLORS.primary,
     borderRadius: wp(2),
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: hp(2),
-    elevation: 1,
-  },
-  verifyButtonActive: {
-    backgroundColor: COLORS.primary,
+    marginBottom: hp(4),
     elevation: 2,
   },
-  verifyText: {
+  buttonDisabled: {
+    backgroundColor: COLORS.surface,
+    elevation: 1,
+  },
+  buttonText: {
     fontFamily: FONTS.medium,
     fontSize: FONT_SIZES.lg,
-    color: COLORS.disabled,
-  },
-  verifyTextActive: {
     color: COLORS.white,
   },
 });

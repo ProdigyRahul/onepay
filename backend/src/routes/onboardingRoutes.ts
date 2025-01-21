@@ -6,6 +6,9 @@ import {
   profileValidation,
   ageValidation,
   financialProfileValidation,
+  primaryGoalValidation,
+  incomeRangeValidation,
+  spendingHabitsValidation,
 } from '../validations/onboardingValidations';
 
 const router = express.Router();
@@ -16,21 +19,42 @@ router.use(authenticate as RequestHandler);
 // Update profile information
 router.post(
   '/profile',
-  validate(profileValidation) as RequestHandler,
+  validate(profileValidation),
   onboardingController.updateProfile as RequestHandler
 );
 
 // Update age information
 router.post(
   '/age',
-  validate(ageValidation) as RequestHandler,
+  validate(ageValidation),
   onboardingController.updateAge as RequestHandler
 );
 
-// Update financial profile
+// Update primary goal
+router.post(
+  '/primary-goal',
+  validate(primaryGoalValidation),
+  onboardingController.updatePrimaryGoal as RequestHandler
+);
+
+// Update income range
+router.post(
+  '/income-range',
+  validate(incomeRangeValidation),
+  onboardingController.updateIncomeRange as RequestHandler
+);
+
+// Update spending habits
+router.post(
+  '/spending-habits',
+  validate(spendingHabitsValidation),
+  onboardingController.updateSpendingHabits as RequestHandler
+);
+
+// Update complete financial profile (legacy)
 router.post(
   '/financial-profile',
-  validate(financialProfileValidation) as RequestHandler,
+  validate(financialProfileValidation),
   onboardingController.updateFinancialProfile as RequestHandler
 );
 

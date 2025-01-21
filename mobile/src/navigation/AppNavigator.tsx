@@ -10,24 +10,68 @@ import NotificationsScreen from '../screens/onboarding/NotificationsScreen';
 import ProfileScreen from '../screens/onboarding/ProfileScreen';
 import AgeScreen from '../screens/onboarding/AgeScreen';
 import PurposeScreen from '../screens/onboarding/PurposeScreen';
+import IncomeScreen from '../screens/onboarding/IncomeScreen';
+import SpendingScreen from '../screens/onboarding/SpendingScreen';
 import { COLORS } from '../theme/colors';
+import { useAppSelector } from '../store/store';
+import { onboardingApi } from '../services/api/onboarding';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 const AppNavigator = () => {
   const [isLoading, setIsLoading] = useState(true);
+  const [initialRoute, setInitialRoute] = useState<keyof RootStackParamList>('Splash');
+  const { token, user } = useAppSelector((state) => state.auth);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 3000); // 3 seconds splash screen
+    const initializeApp = async () => {
+      try {
+        if (token && user) {
+          // Check onboarding status
+          const statusResponse = await onboardingApi.getOnboardingStatus();
+          const status = statusResponse.data;
 
-    return () => clearTimeout(timer);
-  }, []);
+          if (status.onboardingComplete) {
+            setInitialRoute('Home');
+          } else {
+            // Set initial route based on incomplete onboarding step
+            if (!status.profileCompleted) {
+              setInitialRoute('NotificationsPermission');
+            } else if (!status.ageVerified) {
+              setInitialRoute('OnboardingAge');
+            } else if (!status.primaryGoalSet) {
+              setInitialRoute('OnboardingPurpose');
+            } else if (!status.incomeRangeSet) {
+              setInitialRoute('OnboardingIncome');
+            } else {
+              setInitialRoute('OnboardingSpending');
+            }
+          }
+        } else {
+          setInitialRoute('Login');
+        }
+      } catch (error) {
+        console.error('Error checking onboarding status:', error);
+        setInitialRoute('Login');
+      } finally {
+        // Delay removing splash screen slightly to ensure smooth transition
+        setTimeout(() => {
+          setIsLoading(false);
+        }, 3000);
+      }
+    };
+
+    initializeApp();
+  }, [token, user]);
+
+  if (isLoading) {
+    return <SplashScreen />;
+  }
 
   return (
     <NavigationContainer>
       <Stack.Navigator
+        initialRouteName={initialRoute}
         screenOptions={{
           headerShown: false,
           contentStyle: {
@@ -41,51 +85,51 @@ const AppNavigator = () => {
           },
         }}
       >
-        {isLoading ? (
-          <Stack.Screen
-            name="Splash"
-            component={SplashScreen}
-            options={{ headerShown: false }}
-          />
-        ) : (
-          <>
-            <Stack.Screen 
-              name="Login" 
-              component={LoginScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen 
-              name="OTP" 
-              component={OTPScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen 
-              name="NotificationsPermission" 
-              component={NotificationsScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen 
-              name="OnboardingProfile" 
-              component={ProfileScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen 
-              name="OnboardingAge" 
-              component={AgeScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen 
-              name="OnboardingPurpose" 
-              component={PurposeScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen 
-              name="Home" 
-              component={HomeScreen}
-              options={{ headerShown: false }}
-            />
-          </>
-        )}
+        <Stack.Screen 
+          name="Login" 
+          component={LoginScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen 
+          name="OTP" 
+          component={OTPScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen 
+          name="NotificationsPermission" 
+          component={NotificationsScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen 
+          name="OnboardingProfile" 
+          component={ProfileScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen 
+          name="OnboardingAge" 
+          component={AgeScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen 
+          name="OnboardingPurpose" 
+          component={PurposeScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen 
+          name="OnboardingIncome" 
+          component={IncomeScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen 
+          name="OnboardingSpending" 
+          component={SpendingScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen 
+          name="Home" 
+          component={HomeScreen}
+          options={{ headerShown: false }}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );

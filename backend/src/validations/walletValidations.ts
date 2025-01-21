@@ -1,77 +1,46 @@
-import { body } from 'express-validator';
+import { z } from 'zod';
 
-export const createWalletValidation = [
-  body('pin')
-    .isString()
-    .withMessage('PIN must be 4-6 digits')
-    .isLength({ min: 4, max: 6 })
-    .withMessage('PIN must be 4-6 digits')
-    .matches(/^\d+$/)
-    .withMessage('PIN must be 4-6 digits'),
-  body('currency')
-    .optional()
-    .isString()
-    .isLength({ min: 3, max: 3 })
-    .isUppercase()
-    .withMessage('Currency must be a valid 3-letter code (e.g., USD)'),
-  body('dailyLimit')
-    .optional()
-    .isFloat({ min: 0 })
-    .withMessage('Daily limit must be a positive number'),
-  body('monthlyLimit')
-    .optional()
-    .isFloat({ min: 0 })
-    .withMessage('Monthly limit must be a positive number'),
-];
+export const createWalletValidation = z.object({
+  body: z.object({
+    type: z.enum(['SAVINGS', 'CURRENT', 'BUSINESS'], {
+      errorMap: () => ({ message: 'Invalid wallet type' }),
+    }),
+    currency: z.enum(['INR', 'USD'], {
+      errorMap: () => ({ message: 'Invalid currency' }),
+    }),
+  }),
+});
 
-export const addMoneyValidation = [
-  body('amount')
-    .isFloat({ min: 0.01 })
-    .withMessage('Amount must be greater than 0'),
-  body('description')
-    .optional()
-    .isString()
-    .trim()
-    .isLength({ max: 255 })
-    .withMessage('Description must not exceed 255 characters'),
-  body('type')
-    .equals('CREDIT')
-    .withMessage('Transaction type must be CREDIT for adding money'),
-];
+export const addMoneyValidation = z.object({
+  body: z.object({
+    amount: z.number()
+      .min(1, 'Amount must be at least 1')
+      .max(1000000, 'Amount must not exceed 1000000'),
+    paymentMethod: z.enum(['UPI', 'CARD', 'NETBANKING'], {
+      errorMap: () => ({ message: 'Invalid payment method' }),
+    }),
+  }),
+});
 
-export const transferValidation = [
-  body('amount')
-    .isFloat({ min: 0.01 })
-    .withMessage('Amount must be greater than 0'),
-  body('receiverWalletId')
-    .isString()
-    .notEmpty()
-    .withMessage('Receiver wallet ID is required'),
-  body('description')
-    .optional()
-    .isString()
-    .trim()
-    .isLength({ max: 255 })
-    .withMessage('Description must not exceed 255 characters'),
-  body('pin')
-    .isString()
-    .isLength({ min: 4, max: 6 })
-    .matches(/^\d+$/)
-    .withMessage('PIN must be 4-6 digits'),
-];
+export const transferValidation = z.object({
+  body: z.object({
+    amount: z.number()
+      .min(1, 'Amount must be at least 1')
+      .max(1000000, 'Amount must not exceed 1000000'),
+    toWalletId: z.string().uuid('Invalid wallet ID'),
+    description: z.string().max(100, 'Description must not exceed 100 characters').optional(),
+  }),
+});
 
-export const updateLimitsValidation = [
-  body('dailyLimit')
-    .optional()
-    .isFloat({ min: 0 })
-    .withMessage('Daily limit must be a positive number'),
-  body('monthlyLimit')
-    .optional()
-    .isFloat({ min: 0 })
-    .withMessage('Monthly limit must be a positive number'),
-  body('pin')
-    .isString()
-    .isLength({ min: 4, max: 6 })
-    .matches(/^\d+$/)
-    .withMessage('PIN must be 4-6 digits'),
-]; 
+export const updateLimitsValidation = z.object({
+  body: z.object({
+    dailyLimit: z.number()
+      .min(1000, 'Daily limit must be at least 1000')
+      .max(1000000, 'Daily limit must not exceed 1000000')
+      .optional(),
+    monthlyLimit: z.number()
+      .min(5000, 'Monthly limit must be at least 5000')
+      .max(5000000, 'Monthly limit must not exceed 5000000')
+      .optional(),
+  }),
+}); 

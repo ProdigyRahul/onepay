@@ -1,9 +1,13 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import StorageUtils from '../../utils/storage';
 
 interface User {
   id: string;
-  email: string;
-  name: string;
+  phoneNumber: string;
+  firstName: string;
+  lastName: string;
+  isVerified: boolean;
+  role: string;
 }
 
 interface AuthState {
@@ -14,8 +18,8 @@ interface AuthState {
 }
 
 const initialState: AuthState = {
-  user: null,
-  token: null,
+  user: StorageUtils.getUserData(),
+  token: StorageUtils.getAuthToken() || null,
   isLoading: false,
   error: null,
 };
@@ -30,6 +34,9 @@ const authSlice = createSlice({
     ) => {
       state.user = action.payload.user;
       state.token = action.payload.token;
+      // Store in MMKV
+      StorageUtils.setAuthToken(action.payload.token);
+      StorageUtils.setUserData(action.payload.user);
     },
     setLoading: (state, action: PayloadAction<boolean>) => {
       state.isLoading = action.payload;
@@ -41,6 +48,8 @@ const authSlice = createSlice({
       state.user = null;
       state.token = null;
       state.error = null;
+      // Clear storage
+      StorageUtils.clearStorage();
     },
   },
 });

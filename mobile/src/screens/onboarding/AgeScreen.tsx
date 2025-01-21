@@ -5,6 +5,9 @@ import {
   StyleSheet,
   TouchableOpacity,
   StatusBar,
+  Alert,
+  Animated,
+  ActivityIndicator,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -12,6 +15,9 @@ import { COLORS } from '../../theme/colors';
 import { FONTS, FONT_SIZES } from '../../theme/typography';
 import { wp, hp } from '../../utils/responsive';
 import { RootStackParamList } from '../../navigation/types';
+import { useAppDispatch, useAppSelector } from '../../store/store';
+import { setAge, setLoading, setError } from '../../store/slices/onboardingSlice';
+import { onboardingApi } from '../../services/api/onboarding';
 import { CustomKeyboard } from '../../components/common/CustomKeyboard';
 
 type AgeScreenNavigationProp = NativeStackNavigationProp<
@@ -24,29 +30,66 @@ const MAX_AGE = 60;
 
 const AgeScreen = () => {
   const navigation = useNavigation<AgeScreenNavigationProp>();
-  const [age, setAge] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const dispatch = useAppDispatch();
+  const { isLoading } = useAppSelector((state) => state.onboarding);
+
+  const [age, setAgeValue] = useState('');
+  const [shakeAnimation] = useState(new Animated.Value(0));
+
+  const isValidAge = () => {
+    const numericAge = parseInt(age, 10);
+    return age.length > 0 && numericAge >= MIN_AGE && numericAge <= MAX_AGE;
+  };
 
   const handleKeyPress = useCallback((key: string) => {
     if (key === 'backspace') {
-      setAge(prev => prev.slice(0, -1));
+      setAgeValue(prev => prev.slice(0, -1));
     } else if (age.length < 2) {
       const newAge = age + key;
-      setAge(newAge);
+      const numericAge = parseInt(newAge, 10);
+      if (numericAge <= MAX_AGE) {
+        setAgeValue(newAge);
+      } else {
+        // Shake animation for invalid input
+        Animated.sequence([
+          Animated.timing(shakeAnimation, {
+            toValue: 10,
+            duration: 100,
+            useNativeDriver: true,
+          }),
+          Animated.timing(shakeAnimation, {
+            toValue: -10,
+            duration: 100,
+            useNativeDriver: true,
+          }),
+          Animated.timing(shakeAnimation, {
+            toValue: 0,
+            duration: 100,
+            useNativeDriver: true,
+          }),
+        ]).start();
+      }
     }
-  }, [age]);
+  }, [age, shakeAnimation]);
 
-  const isValidAge = () => {
-    const numAge = parseInt(age, 10);
-    return !isNaN(numAge) && numAge >= MIN_AGE && numAge <= MAX_AGE;
-  };
+  const handleContinue = async () => {
+    if (!isValidAge()) {
+      Alert.alert('Error', `Age must be between ${MIN_AGE} and ${MAX_AGE} years`);
+      return;
+    }
 
-  const handleContinue = () => {
-    if (isValidAge()) {
-      console.log('Continuing with age:', age);
-      setIsLoading(true);
+    try {
+      dispatch(setLoading(true));
+      const numericAge = parseInt(age, 10);
+      await onboardingApi.updateAge(numericAge);
+      dispatch(setAge(numericAge));
       navigation.navigate('OnboardingPurpose');
-      setIsLoading(false);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to update age';
+      dispatch(setError(errorMessage));
+      Alert.alert('Error', errorMessage);
+    } finally {
+      dispatch(setLoading(false));
     }
   };
 
@@ -56,17 +99,18 @@ const AgeScreen = () => {
       
       <View style={styles.content}>
         <View style={styles.topSection}>
-          <Text style={styles.title}>What's your age?</Text>
+          <Text style={styles.title}>What's your <Text style={styles.titleHighlight}>age</Text>?</Text>
           <Text style={styles.subtitle}>
-            This helps us personalize your experience
+            This helps us personalize your financial recommendations
           </Text>
         </View>
 
         <View style={styles.inputSection}>
-          <View 
+          <Animated.View 
             style={[
               styles.ageDisplay,
-              !isValidAge() && age.length === 2 && styles.ageDisplayError
+              !isValidAge() && age.length === 2 && styles.ageDisplayError,
+              { transform: [{ translateX: shakeAnimation }] }
             ]}>
             <Text style={[
               styles.ageText,
@@ -74,10 +118,10 @@ const AgeScreen = () => {
             ]}>
               {age || '18'}
             </Text>
-          </View>
+          </Animated.View>
           {age.length > 0 && !isValidAge() && (
             <Text style={styles.errorText}>
-              Please enter an age between 18 and 60
+              Please enter an age between {MIN_AGE} and {MAX_AGE}
             </Text>
           )}
         </View>
@@ -90,12 +134,16 @@ const AgeScreen = () => {
             ]}
             onPress={handleContinue}
             disabled={!isValidAge() || isLoading}>
-            <Text style={[
-              styles.buttonText,
-              isValidAge() && styles.buttonTextActive
-            ]}>
-              {isLoading ? 'Please wait...' : 'Continue'}
-            </Text>
+            {isLoading ? (
+              <ActivityIndicator color={COLORS.white} size="small" />
+            ) : (
+              <Text style={[
+                styles.buttonText,
+                isValidAge() && styles.buttonTextActive
+              ]}>
+                Continue
+              </Text>
+            )}
           </TouchableOpacity>
 
           <CustomKeyboard onKeyPress={handleKeyPress} />
@@ -120,11 +168,15 @@ const styles = StyleSheet.create({
     marginBottom: hp(6),
   },
   title: {
-    fontFamily: FONTS.bold,
+    fontFamily: FONTS.regular,
     fontSize: FONT_SIZES.xxxl,
-    color: COLORS.primary,
+    color: COLORS.black,
     marginBottom: hp(2),
     textAlign: 'center',
+  },
+  titleHighlight: {
+    fontFamily: FONTS.bold,
+    color: COLORS.primary,
   },
   subtitle: {
     fontFamily: FONTS.regular,
@@ -147,6 +199,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: hp(2),
+    elevation: 2,
   },
   ageDisplayError: {
     borderColor: '#FF3B30',

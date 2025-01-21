@@ -1,10 +1,11 @@
 import axios from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
-const BASE_URL = 'http://localhost:3000/api'; // Change this to your backend URL
+import { API_CONFIG } from '../config/api';
+import StorageUtils from '../utils/storage';
+import { store } from '../store/store';
+import { logout } from '../store/slices/authSlice';
 
 export const apiClient = axios.create({
-  baseURL: BASE_URL,
+  baseURL: API_CONFIG.BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -13,7 +14,7 @@ export const apiClient = axios.create({
 // Request interceptor for API calls
 apiClient.interceptors.request.use(
   async (config) => {
-    const token = await AsyncStorage.getItem('token');
+    const token = StorageUtils.getAuthToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -34,9 +35,9 @@ apiClient.interceptors.response.use(
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       
-      // Clear token and redirect to login
-      await AsyncStorage.removeItem('token');
-      // You would typically dispatch a logout action here
+      // Clear storage and trigger logout
+      StorageUtils.clearStorage();
+      store.dispatch(logout());
       
       return Promise.reject(error);
     }

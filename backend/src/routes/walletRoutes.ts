@@ -11,13 +11,13 @@ import {
 
 const router = express.Router();
 
-// Protected routes
+// All routes require authentication
 router.use(authenticate as RequestHandler);
 
-// Create wallet
+// Create new wallet
 router.post(
   '/',
-  validate(createWalletValidation) as RequestHandler,
+  validate(createWalletValidation),
   walletController.createWallet as RequestHandler
 );
 
@@ -30,21 +30,21 @@ router.get(
 // Add money to wallet
 router.post(
   '/:walletId/add',
-  validate(addMoneyValidation) as RequestHandler,
+  validate(addMoneyValidation),
   walletController.addMoney as RequestHandler
 );
 
-// Transfer money
+// Transfer money between wallets
 router.post(
   '/:walletId/transfer',
-  validate(transferValidation) as RequestHandler,
+  validate(transferValidation),
   walletController.transfer as RequestHandler
 );
 
 // Update wallet limits
-router.put(
+router.patch(
   '/:walletId/limits',
-  validate(updateLimitsValidation) as RequestHandler,
+  validate(updateLimitsValidation),
   walletController.updateLimits as RequestHandler
 );
 

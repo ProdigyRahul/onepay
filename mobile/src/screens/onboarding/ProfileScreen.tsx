@@ -3,12 +3,11 @@ import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
   TextInput,
+  TouchableOpacity,
   StatusBar,
   ScrollView,
-  KeyboardAvoidingView,
-  Platform,
+  Alert,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -16,6 +15,10 @@ import { COLORS } from '../../theme/colors';
 import { FONTS, FONT_SIZES } from '../../theme/typography';
 import { wp, hp } from '../../utils/responsive';
 import { RootStackParamList } from '../../navigation/types';
+import { useAppDispatch, useAppSelector } from '../../store/store';
+import { setProfile, setLoading, setError } from '../../store/slices/onboardingSlice';
+import { onboardingApi } from '../../services/api/onboarding';
+import axios from 'axios';
 
 type ProfileScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -24,43 +27,72 @@ type ProfileScreenNavigationProp = NativeStackNavigationProp<
 
 const ProfileScreen = () => {
   const navigation = useNavigation<ProfileScreenNavigationProp>();
+  const dispatch = useAppDispatch();
+  const { isLoading, error } = useAppSelector((state) => state.onboarding);
+
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [panNumber, setPanNumber] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
 
-  const formatPanNumber = (text: string) => {
-    // Remove any non-alphanumeric characters and convert to uppercase
-    const formatted = text.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
-    if (formatted.length <= 10) {
-      setPanNumber(formatted);
-    }
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
   };
 
-  const handleContinue = async () => {
-    if (!firstName.trim() || !lastName.trim() || !email.trim() || panNumber.length !== 10) {
+  const validatePAN = (pan: string) => {
+    const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
+    return panRegex.test(pan);
+  };
+
+  const handleSubmit = async () => {
+    if (!firstName.trim() || !lastName.trim() || !email.trim() || !panNumber.trim()) {
+      Alert.alert('Error', 'Please fill in all fields');
+      return;
+    }
+
+    if (!validateEmail(email)) {
+      Alert.alert('Error', 'Please enter a valid email address');
+      return;
+    }
+
+    if (!validatePAN(panNumber)) {
+      Alert.alert('Error', 'Please enter a valid PAN number (e.g., ABCDE1234F)');
       return;
     }
 
     try {
-      setIsLoading(true);
-      // Here you would typically make an API call to update the user's profile
+      dispatch(setLoading(true));
+      const profileData = { firstName, lastName, email, panNumber };
+      console.log('Submitting profile data:', profileData);
+      const response = await onboardingApi.updateProfile(profileData);
+      console.log('Profile update response:', response);
+      dispatch(setProfile(profileData));
       navigation.navigate('OnboardingAge');
-    } catch (error) {
-      console.error('Profile update error:', error);
+    } catch (err) {
+      console.error('Profile update error:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to update profile';
+      if (axios.isAxiosError(err)) {
+        console.error('Network Error Details:', {
+          status: err.response?.status,
+          data: err.response?.data,
+          config: {
+            url: err.config?.url,
+            method: err.config?.method,
+            baseURL: err.config?.baseURL,
+          }
+        });
+      }
+      dispatch(setError(errorMessage));
+      Alert.alert('Error', `Failed to update profile: ${errorMessage}`);
     } finally {
-      setIsLoading(false);
+      dispatch(setLoading(false));
     }
   };
 
-  const isFormValid = firstName.trim() && lastName.trim() && email.trim() && panNumber.length === 10;
-
   return (
-    <KeyboardAvoidingView 
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={COLORS.white} />
       
       <ScrollView 
@@ -137,53 +169,40 @@ const ProfileScreen = () => {
             />
           </View>
 
-          {/* PAN Card Input */}
+          {/* PAN Number Input */}
           <View style={styles.inputContainer}>
             <Text style={[styles.label, focusedInput === 'pan' && styles.labelFocused]}>
-              PAN Card Number
+              PAN Number
             </Text>
             <TextInput
               style={[
                 styles.input,
                 focusedInput === 'pan' && styles.inputFocused
               ]}
-              placeholder="Enter your 10-digit PAN number"
+              placeholder="Enter your PAN number"
               placeholderTextColor={COLORS.disabled}
               value={panNumber}
-              onChangeText={formatPanNumber}
+              onChangeText={(text) => setPanNumber(text.toUpperCase())}
               onFocus={() => setFocusedInput('pan')}
               onBlur={() => setFocusedInput(null)}
               autoCapitalize="characters"
               maxLength={10}
             />
-            <Text style={[
-              styles.helperText,
-              focusedInput === 'pan' && styles.helperTextFocused
-            ]}>
-              Format: ABCDE1234F
-            </Text>
           </View>
         </View>
 
         <View style={styles.bottomSection}>
           <TouchableOpacity
-            style={[
-              styles.button,
-              isFormValid && styles.buttonActive,
-            ]}
-            onPress={handleContinue}
-            disabled={!isFormValid || isLoading}>
-            <Text
-              style={[
-                styles.buttonText,
-                isFormValid && styles.buttonTextActive,
-              ]}>
-              {isLoading ? 'Setting up...' : 'Continue'}
+            style={[styles.button, isLoading && styles.buttonDisabled]}
+            onPress={handleSubmit}
+            disabled={isLoading}>
+            <Text style={styles.buttonText}>
+              {isLoading ? 'Saving...' : 'Continue'}
             </Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
-    </KeyboardAvoidingView>
+    </View>
   );
 };
 
@@ -201,12 +220,13 @@ const styles = StyleSheet.create({
     marginBottom: hp(6),
   },
   title: {
-    fontFamily: FONTS.bold,
-    fontSize: FONT_SIZES.xxl,
+    fontFamily: FONTS.regular,
+    fontSize: FONT_SIZES.xxxl,
     color: COLORS.black,
     marginBottom: hp(2),
   },
   titleHighlight: {
+    fontFamily: FONTS.bold,
     color: COLORS.primary,
   },
   subtitle: {
@@ -217,67 +237,51 @@ const styles = StyleSheet.create({
   },
   formContainer: {
     paddingHorizontal: wp(6),
+    gap: hp(3),
   },
   inputContainer: {
-    marginBottom: hp(3),
+    gap: hp(1),
   },
   label: {
     fontFamily: FONTS.medium,
     fontSize: FONT_SIZES.sm,
-    color: COLORS.black,
-    marginBottom: hp(1),
+    color: COLORS.textSecondary,
   },
   labelFocused: {
     color: COLORS.primary,
   },
   input: {
     height: hp(6),
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderColor: COLORS.border,
     borderRadius: wp(2),
     paddingHorizontal: wp(4),
-    fontSize: FONT_SIZES.md,
     fontFamily: FONTS.regular,
+    fontSize: FONT_SIZES.md,
     color: COLORS.black,
-    backgroundColor: COLORS.white,
   },
   inputFocused: {
     borderColor: COLORS.primary,
-    backgroundColor: '#F0F7FF',
-  },
-  helperText: {
-    fontFamily: FONTS.regular,
-    fontSize: FONT_SIZES.xs,
-    color: COLORS.textSecondary,
-    marginTop: hp(0.5),
-    marginLeft: wp(1),
-  },
-  helperTextFocused: {
-    color: COLORS.primary,
   },
   bottomSection: {
     paddingHorizontal: wp(6),
     paddingVertical: hp(4),
+    marginTop: 'auto',
   },
   button: {
     width: '100%',
     height: hp(6),
-    backgroundColor: COLORS.surface,
+    backgroundColor: COLORS.primary,
     borderRadius: wp(2),
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 1,
   },
-  buttonActive: {
-    backgroundColor: COLORS.primary,
-    elevation: 2,
+  buttonDisabled: {
+    opacity: 0.7,
   },
   buttonText: {
     fontFamily: FONTS.medium,
-    fontSize: FONT_SIZES.lg,
-    color: COLORS.disabled,
-  },
-  buttonTextActive: {
+    fontSize: FONT_SIZES.md,
     color: COLORS.white,
   },
 });

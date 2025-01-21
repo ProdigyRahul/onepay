@@ -16,6 +16,7 @@ export const FONT_SIZES = {
   xl: fontSize(20),
   xxl: fontSize(24),
   xxxl: fontSize(32),
+  splash: fontSize(48),
 } as const;
 
 export const LINE_HEIGHTS = {
