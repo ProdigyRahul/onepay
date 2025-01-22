@@ -5,7 +5,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   StatusBar,
-  ScrollView,
   Alert,
   ActivityIndicator,
 } from 'react-native';
@@ -79,22 +78,22 @@ const SpendingScreen = () => {
     try {
       dispatch(setLoading(true));
       console.log('Updating spending habits...');
-      
+
       const response = await onboardingApi.updateSpendingHabits({
         spendingHabit: selectedSpending,
         targetSpendingPercentage: 0,
       });
-      
+
       if (!response.success) {
         throw new Error('Failed to update spending habits');
       }
 
       dispatch(setSpending({ habit: selectedSpending, percentage: 0 }));
       console.log('Spending habits updated successfully');
-      
+
       // Small delay to ensure backend state is updated
       await new Promise(resolve => setTimeout(resolve, 500));
-      
+
       // Get final onboarding status
       console.log('Checking onboarding status...');
       const statusResponse = await onboardingApi.getOnboardingStatus();
@@ -113,7 +112,7 @@ const SpendingScreen = () => {
         console.error('Onboarding not complete:', statusResponse.data);
         Alert.alert('Error', 'Failed to complete onboarding. Please try again.');
       }
-      
+
     } catch (err) {
       console.error('Error in handleSubmit:', err);
       const errorMessage = err instanceof Error ? err.message : 'Failed to update spending habits';
@@ -127,7 +126,7 @@ const SpendingScreen = () => {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={COLORS.white} />
-      
+
       <View style={styles.content}>
         <View style={styles.topSection}>
           <Text style={styles.title}>What's your <Text style={styles.titleHighlight}>spending style</Text>?</Text>
@@ -176,7 +175,7 @@ const SpendingScreen = () => {
           <TouchableOpacity
             style={[
               styles.button,
-              selectedSpending && styles.buttonActive
+              selectedSpending && styles.buttonActive,
             ]}
             onPress={handleSubmit}
             disabled={!selectedSpending || isLoading}>
@@ -185,7 +184,7 @@ const SpendingScreen = () => {
             ) : (
               <Text style={[
                 styles.buttonText,
-                selectedSpending && styles.buttonTextActive
+                selectedSpending && styles.buttonTextActive,
               ]}>
                 Continue
               </Text>
@@ -305,4 +304,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default SpendingScreen; 
+export default SpendingScreen;

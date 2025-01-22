@@ -41,7 +41,7 @@ const LoginScreen = () => {
   }, [phoneNumber]);
 
   const handleContinue = async () => {
-    if (phoneNumber.length !== 10) return;
+    if (phoneNumber.length !== 10) {return;}
 
     try {
       setIsLoading(true);
@@ -227,4 +227,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default LoginScreen; 
+export default LoginScreen;

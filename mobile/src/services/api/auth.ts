@@ -25,4 +25,4 @@ export const verifyOTP = async (data: { phoneNumber: string; code: string }): Pr
 export const generateOTP = async (phoneNumber: string) => {
   const response = await apiClient.post('/auth/generate-otp', { phoneNumber });
   return response.data;
-}; 
+};

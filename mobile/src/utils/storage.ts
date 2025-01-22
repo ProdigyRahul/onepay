@@ -33,4 +33,4 @@ export const StorageUtils = {
   },
 };
 
-export default StorageUtils; 
+export default StorageUtils;

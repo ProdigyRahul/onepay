@@ -34,14 +34,14 @@ apiClient.interceptors.response.use(
     // Handle 401 Unauthorized errors
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
-      
+
       // Clear storage and trigger logout
       StorageUtils.clearStorage();
       store.dispatch(logout());
-      
+
       return Promise.reject(error);
     }
 
     return Promise.reject(error);
   }
-); 
+);

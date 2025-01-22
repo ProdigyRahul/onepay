@@ -3,16 +3,16 @@ module.exports = {
     ios: {},
     android: {},
   },
-  "react-native-vector-icons": {
+  'react-native-vector-icons': {
     platforms: {
       ios: null,
     },
   },
-  assets: ["./src/assets/fonts/"],
+  assets: ['./src/assets/fonts/'],
   getTransformModulePath() {
-    return require.resolve("react-native-typescript-transformer");
+    return require.resolve('react-native-typescript-transformer');
   },
   getSourceExts() {
-    return ["ts", "tsx"];
+    return ['ts', 'tsx'];
   },
-}; 
+};

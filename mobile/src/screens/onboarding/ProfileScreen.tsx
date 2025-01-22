@@ -28,7 +28,7 @@ type ProfileScreenNavigationProp = NativeStackNavigationProp<
 const ProfileScreen = () => {
   const navigation = useNavigation<ProfileScreenNavigationProp>();
   const dispatch = useAppDispatch();
-  const { isLoading, error } = useAppSelector((state) => state.onboarding);
+  const { isLoading } = useAppSelector((state) => state.onboarding);
 
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -36,9 +36,9 @@ const ProfileScreen = () => {
   const [panNumber, setPanNumber] = useState('');
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
 
-  const validateEmail = (email: string) => {
+  const validateEmail = (emailValue: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
+    return emailRegex.test(emailValue);
   };
 
   const validatePAN = (pan: string) => {
@@ -81,7 +81,7 @@ const ProfileScreen = () => {
             url: err.config?.url,
             method: err.config?.method,
             baseURL: err.config?.baseURL,
-          }
+          },
         });
       }
       dispatch(setError(errorMessage));
@@ -94,8 +94,8 @@ const ProfileScreen = () => {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={COLORS.white} />
-      
-      <ScrollView 
+
+      <ScrollView
         style={styles.content}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled">
@@ -115,7 +115,7 @@ const ProfileScreen = () => {
             <TextInput
               style={[
                 styles.input,
-                focusedInput === 'firstName' && styles.inputFocused
+                focusedInput === 'firstName' && styles.inputFocused,
               ]}
               placeholder="Enter your first name"
               placeholderTextColor={COLORS.disabled}
@@ -135,7 +135,7 @@ const ProfileScreen = () => {
             <TextInput
               style={[
                 styles.input,
-                focusedInput === 'lastName' && styles.inputFocused
+                focusedInput === 'lastName' && styles.inputFocused,
               ]}
               placeholder="Enter your last name"
               placeholderTextColor={COLORS.disabled}
@@ -155,7 +155,7 @@ const ProfileScreen = () => {
             <TextInput
               style={[
                 styles.input,
-                focusedInput === 'email' && styles.inputFocused
+                focusedInput === 'email' && styles.inputFocused,
               ]}
               placeholder="Enter your email address"
               placeholderTextColor={COLORS.disabled}
@@ -177,7 +177,7 @@ const ProfileScreen = () => {
             <TextInput
               style={[
                 styles.input,
-                focusedInput === 'pan' && styles.inputFocused
+                focusedInput === 'pan' && styles.inputFocused,
               ]}
               placeholder="Enter your PAN number"
               placeholderTextColor={COLORS.disabled}
@@ -286,4 +286,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ProfileScreen; 
+export default ProfileScreen;

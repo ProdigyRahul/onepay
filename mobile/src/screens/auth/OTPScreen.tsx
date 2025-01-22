@@ -52,17 +52,17 @@ const OTPScreen = () => {
     try {
       dispatch(setLoading(true));
       const response = await verifyOTP({ phoneNumber, code: otp });
-      
+
       if (response.success && response.data) {
         dispatch(setCredentials({
           user: response.data.user,
           token: response.data.token,
         }));
-        
+
         // Check onboarding status
         const statusResponse = await onboardingApi.getOnboardingStatus();
         const status = statusResponse.data;
-        
+
         if (status.onboardingComplete) {
           navigation.reset({
             index: 0,
@@ -268,4 +268,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default OTPScreen; 
+export default OTPScreen;

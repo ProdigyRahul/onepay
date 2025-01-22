@@ -10,7 +10,7 @@ export const colors = {
   subtext: '#8E8E93',
   border: '#C6C6C8',
   success: '#34C759',
-  warning: '#FF9500'
+  warning: '#FF9500',
 };
 
 export const typography = {
@@ -27,7 +27,7 @@ export const typography = {
     medium: '500',
     semibold: '600',
     bold: '700',
-  }
+  },
 };
 
 export const spacing = {
@@ -52,4 +52,4 @@ export const theme = {
   },
   spacing,
   typography,
-}; 
+};

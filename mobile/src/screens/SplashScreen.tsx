@@ -12,12 +12,12 @@ const SplashScreen = () => {
       duration: 1000,
       useNativeDriver: true,
     }).start();
-  }, []);
+  }, [fadeAnim]);
 
   return (
     <View style={styles.container}>
       <Animated.View style={[styles.logoContainer, { opacity: fadeAnim }]}>
-        <Image 
+        <Image
           source={require('../assets/images/logo.png')}
           style={styles.logo}
           resizeMode="contain"
@@ -46,4 +46,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default SplashScreen; 
+export default SplashScreen;

@@ -14,18 +14,24 @@ import AppNavigator from './src/navigation/AppNavigator';
 import StorageUtils from './src/utils/storage';
 import { setCredentials } from './src/store/slices/authSlice';
 
+const styles = {
+  root: {
+    flex: 1,
+  },
+};
+
 const App = () => {
   useEffect(() => {
     // Check for stored auth data on app launch
     const initializeAuth = async () => {
       const token = StorageUtils.getAuthToken();
       const userData = StorageUtils.getUserData();
-      
+
       if (token && userData) {
         // Restore auth state from storage
         store.dispatch(setCredentials({
           user: userData,
-          token: token
+          token: token,
         }));
       }
     };
@@ -35,7 +41,7 @@ const App = () => {
 
   return (
     <Provider store={store}>
-      <GestureHandlerRootView style={{ flex: 1 }}>
+      <GestureHandlerRootView style={styles.root}>
         <SafeAreaProvider>
           <AppNavigator />
         </SafeAreaProvider>

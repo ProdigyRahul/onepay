@@ -18,7 +18,7 @@ import { wp, hp } from '../../utils/responsive';
 import { RootStackParamList } from '../../navigation/types';
 import { useAppDispatch, useAppSelector } from '../../store/store';
 import { setIncome, setLoading, setError } from '../../store/slices/onboardingSlice';
-import { onboardingApi, IncomeRange, SpendingHabit, UserGoal } from '../../services/api/onboarding';
+import { onboardingApi, IncomeRange } from '../../services/api/onboarding';
 import axios from 'axios';
 
 type IncomeScreenNavigationProp = NativeStackNavigationProp<
@@ -97,12 +97,12 @@ const IncomeScreen = () => {
       console.log('Submitting income range:', {
         selectedIncome,
         type: typeof selectedIncome,
-        stringified: JSON.stringify({ incomeRange: selectedIncome })
+        stringified: JSON.stringify({ incomeRange: selectedIncome }),
       });
-      
+
       const response = await onboardingApi.updateIncomeRange(selectedIncome);
       console.log('Income range update response:', response);
-      
+
       dispatch(setIncome(selectedIncome));
       navigation.navigate('OnboardingSpending');
     } catch (err) {
@@ -115,8 +115,8 @@ const IncomeScreen = () => {
             url: err.config?.url,
             method: err.config?.method,
             data: err.config?.data,
-            headers: err.config?.headers
-          }
+            headers: err.config?.headers,
+          },
         });
       }
       const errorMessage = err instanceof Error ? err.message : 'Failed to update income range';
@@ -130,8 +130,8 @@ const IncomeScreen = () => {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={COLORS.white} />
-      
-      <ScrollView 
+
+      <ScrollView
         style={styles.content}
         showsVerticalScrollIndicator={false}>
         <View style={styles.topSection}>
@@ -178,7 +178,7 @@ const IncomeScreen = () => {
           <TouchableOpacity
             style={[
               styles.button,
-              selectedIncome && styles.buttonActive
+              selectedIncome && styles.buttonActive,
             ]}
             onPress={handleSubmit}
             disabled={!selectedIncome || isLoading}>
@@ -187,7 +187,7 @@ const IncomeScreen = () => {
             ) : (
               <Text style={[
                 styles.buttonText,
-                selectedIncome && styles.buttonTextActive
+                selectedIncome && styles.buttonTextActive,
               ]}>
                 Continue
               </Text>
@@ -301,4 +301,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default IncomeScreen; 
+export default IncomeScreen;

@@ -31,8 +31,8 @@ const NotificationsScreen = () => {
   }, []);
 
   const checkNotificationSettings = async () => {
-    const settings = await notifee.getNotificationSettings();
-    
+    await notifee.getNotificationSettings();
+
     if (Platform.OS === 'android') {
       // Check for battery optimization
       const batteryOptimizationEnabled = await notifee.isBatteryOptimizationEnabled();
@@ -46,8 +46,8 @@ const NotificationsScreen = () => {
               onPress: async () => await notifee.openBatteryOptimizationSettings(),
             },
             {
-              text: "Skip",
-              style: "cancel",
+              text: 'Skip',
+              style: 'cancel',
             },
           ]
         );
@@ -65,8 +65,8 @@ const NotificationsScreen = () => {
               onPress: async () => await notifee.openPowerManagerSettings(),
             },
             {
-              text: "Skip",
-              style: "cancel",
+              text: 'Skip',
+              style: 'cancel',
             },
           ]
         );
@@ -77,7 +77,7 @@ const NotificationsScreen = () => {
   const requestPermissions = async () => {
     try {
       setIsLoading(true);
-      
+
       // Request permissions
       const settings = await notifee.requestPermission();
 
@@ -93,7 +93,7 @@ const NotificationsScreen = () => {
 
         // Display a test notification
         await notifee.displayNotification({
-          title: 'Welcome to OnePay! 🎉',
+          title: 'Welcome to OnePay! ',
           body: 'You will now receive important updates about your transactions.',
           android: {
             channelId: 'default',
@@ -121,9 +121,9 @@ const NotificationsScreen = () => {
               },
             },
             {
-              text: "Skip",
+              text: 'Skip',
               onPress: () => navigation.navigate('OnboardingProfile'),
-              style: "cancel",
+              style: 'cancel',
             },
           ]
         );
@@ -139,7 +139,7 @@ const NotificationsScreen = () => {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={COLORS.white} />
-      
+
       <View style={styles.content}>
         <View style={styles.topSection}>
           <Text style={styles.title}>Stay Updated</Text>
@@ -186,8 +186,8 @@ const NotificationsScreen = () => {
               {isLoading ? 'Setting up...' : 'Enable Notifications'}
             </Text>
           </TouchableOpacity>
-          
-          <TouchableOpacity 
+
+          <TouchableOpacity
             style={styles.skipButton}
             onPress={() => navigation.navigate('OnboardingProfile')}>
             <Text style={styles.skipButtonText}>Skip for now</Text>
@@ -311,4 +311,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default NotificationsScreen; 
+export default NotificationsScreen;

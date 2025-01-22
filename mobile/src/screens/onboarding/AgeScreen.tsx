@@ -96,7 +96,7 @@ const AgeScreen = () => {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={COLORS.white} />
-      
+
       <View style={styles.content}>
         <View style={styles.topSection}>
           <Text style={styles.title}>What's your <Text style={styles.titleHighlight}>age</Text>?</Text>
@@ -106,15 +106,15 @@ const AgeScreen = () => {
         </View>
 
         <View style={styles.inputSection}>
-          <Animated.View 
+          <Animated.View
             style={[
               styles.ageDisplay,
               !isValidAge() && age.length === 2 && styles.ageDisplayError,
-              { transform: [{ translateX: shakeAnimation }] }
+              { transform: [{ translateX: shakeAnimation }] },
             ]}>
             <Text style={[
               styles.ageText,
-              !age && styles.agePlaceholder
+              !age && styles.agePlaceholder,
             ]}>
               {age || '18'}
             </Text>
@@ -130,7 +130,7 @@ const AgeScreen = () => {
           <TouchableOpacity
             style={[
               styles.button,
-              isValidAge() && styles.buttonActive
+              isValidAge() && styles.buttonActive,
             ]}
             onPress={handleContinue}
             disabled={!isValidAge() || isLoading}>
@@ -139,7 +139,7 @@ const AgeScreen = () => {
             ) : (
               <Text style={[
                 styles.buttonText,
-                isValidAge() && styles.buttonTextActive
+                isValidAge() && styles.buttonTextActive,
               ]}>
                 Continue
               </Text>
@@ -250,4 +250,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default AgeScreen; 
+export default AgeScreen;

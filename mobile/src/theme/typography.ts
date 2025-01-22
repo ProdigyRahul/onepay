@@ -55,4 +55,4 @@ export const TYPOGRAPHY = {
     fontWeight: '400' as const,
     fontFamily: Platform.select({ ios: 'System', android: 'Roboto' }),
   },
-} as const; 
+} as const;
