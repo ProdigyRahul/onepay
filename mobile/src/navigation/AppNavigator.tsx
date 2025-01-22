@@ -85,48 +85,48 @@ const AppNavigator = () => {
           },
         }}
       >
-        <Stack.Screen 
-          name="Login" 
+        <Stack.Screen
+          name="Login"
           component={LoginScreen}
           options={{ headerShown: false }}
         />
-        <Stack.Screen 
-          name="OTP" 
+        <Stack.Screen
+          name="OTP"
           component={OTPScreen}
           options={{ headerShown: false }}
         />
-        <Stack.Screen 
-          name="NotificationsPermission" 
+        <Stack.Screen
+          name="NotificationsPermission"
           component={NotificationsScreen}
           options={{ headerShown: false }}
         />
-        <Stack.Screen 
-          name="OnboardingProfile" 
+        <Stack.Screen
+          name="OnboardingProfile"
           component={ProfileScreen}
           options={{ headerShown: false }}
         />
-        <Stack.Screen 
-          name="OnboardingAge" 
+        <Stack.Screen
+          name="OnboardingAge"
           component={AgeScreen}
           options={{ headerShown: false }}
         />
-        <Stack.Screen 
-          name="OnboardingPurpose" 
+        <Stack.Screen
+          name="OnboardingPurpose"
           component={PurposeScreen}
           options={{ headerShown: false }}
         />
-        <Stack.Screen 
-          name="OnboardingIncome" 
+        <Stack.Screen
+          name="OnboardingIncome"
           component={IncomeScreen}
           options={{ headerShown: false }}
         />
-        <Stack.Screen 
-          name="OnboardingSpending" 
+        <Stack.Screen
+          name="OnboardingSpending"
           component={SpendingScreen}
           options={{ headerShown: false }}
         />
-        <Stack.Screen 
-          name="Home" 
+        <Stack.Screen
+          name="Home"
           component={HomeScreen}
           options={{ headerShown: false }}
         />

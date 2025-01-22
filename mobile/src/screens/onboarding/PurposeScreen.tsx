@@ -18,7 +18,7 @@ import { wp, hp } from '../../utils/responsive';
 import { RootStackParamList } from '../../navigation/types';
 import { useAppDispatch, useAppSelector } from '../../store/store';
 import { setPurpose, setLoading, setError } from '../../store/slices/onboardingSlice';
-import { onboardingApi, UserGoal, IncomeRange, SpendingHabit } from '../../services/api/onboarding';
+import { onboardingApi, UserGoal } from '../../services/api/onboarding';
 
 type PurposeScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -93,8 +93,8 @@ const PurposeScreen = () => {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={COLORS.white} />
-      
-      <ScrollView 
+
+      <ScrollView
         style={styles.content}
         showsVerticalScrollIndicator={false}>
         <View style={styles.topSection}>
@@ -141,7 +141,7 @@ const PurposeScreen = () => {
           <TouchableOpacity
             style={[
               styles.button,
-              selectedPurpose && styles.buttonActive
+              selectedPurpose && styles.buttonActive,
             ]}
             onPress={handleSubmit}
             disabled={!selectedPurpose || isLoading}>
@@ -150,7 +150,7 @@ const PurposeScreen = () => {
             ) : (
               <Text style={[
                 styles.buttonText,
-                selectedPurpose && styles.buttonTextActive
+                selectedPurpose && styles.buttonTextActive,
               ]}>
                 Continue
               </Text>
@@ -264,4 +264,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default PurposeScreen; 
+export default PurposeScreen;

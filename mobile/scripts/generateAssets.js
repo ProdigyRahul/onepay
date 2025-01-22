@@ -32,7 +32,7 @@ function createLogoImage(size, bgColor = COLORS.primary, textColor = COLORS.whit
 
   // Draw "One" slightly above center
   ctx.fillText('One', size / 2, size / 2 - fontSize / 2);
-  
+
   // Draw "Pay" slightly below center
   ctx.fillText('Pay', size / 2, size / 2 + fontSize / 2);
 
@@ -61,13 +61,13 @@ const iconsDir = path.join(assetsDir, 'icons');
 // Generate assets
 Object.entries(SIZES).forEach(([name, size]) => {
   const buffer = createLogoImage(size);
-  
+
   // Save to both images and icons directories
   const imagePath = path.join(imagesDir, `${name}.png`);
   const iconPath = path.join(iconsDir, `${name}.png`);
-  
+
   fs.writeFileSync(imagePath, buffer);
   fs.writeFileSync(iconPath, buffer);
-  
+
   console.log(`Generated ${name}.png (${size}x${size}px)`);
-}); 
+});

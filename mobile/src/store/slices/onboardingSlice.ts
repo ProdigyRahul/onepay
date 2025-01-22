@@ -80,4 +80,4 @@ export const {
   resetOnboarding,
 } = onboardingSlice.actions;
 
-export default onboardingSlice.reducer; 
+export default onboardingSlice.reducer;

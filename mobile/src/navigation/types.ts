@@ -13,4 +13,4 @@ export type RootStackParamList = {
   OnboardingSpending: undefined;
   OnboardingSavings: undefined;
   Home: undefined;
-}; 
+};

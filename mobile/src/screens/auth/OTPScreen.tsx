@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, StatusBar, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, StatusBar, Alert, ActivityIndicator } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { verifyOTP } from '../../services/api/auth';
@@ -52,17 +52,17 @@ const OTPScreen = () => {
     try {
       dispatch(setLoading(true));
       const response = await verifyOTP({ phoneNumber, code: otp });
-      
+
       if (response.success && response.data) {
         dispatch(setCredentials({
           user: response.data.user,
           token: response.data.token,
         }));
-        
+
         // Check onboarding status
         const statusResponse = await onboardingApi.getOnboardingStatus();
         const status = statusResponse.data;
-        
+
         if (status.onboardingComplete) {
           navigation.reset({
             index: 0,
@@ -156,9 +156,11 @@ const OTPScreen = () => {
             style={[styles.button, isLoading && styles.buttonDisabled]}
             onPress={handleVerifyOTP}
             disabled={isLoading}>
-            <Text style={styles.buttonText}>
-              {isLoading ? 'Verifying...' : 'Verify'}
-            </Text>
+            {isLoading ? (
+              <ActivityIndicator size="small" color={COLORS.white} />
+            ) : (
+              <Text style={styles.buttonText}>Verify</Text>
+            )}
           </TouchableOpacity>
 
           <CustomKeyboard onKeyPress={handleKeyPress} />
@@ -191,7 +193,7 @@ const styles = StyleSheet.create({
   subtitle: {
     fontFamily: FONTS.regular,
     fontSize: FONT_SIZES.md,
-    color: COLORS.textSecondary,
+    color: COLORS.textLight,
     lineHeight: hp(3),
   },
   otpSection: {
@@ -230,7 +232,7 @@ const styles = StyleSheet.create({
   timerText: {
     fontFamily: FONTS.regular,
     fontSize: FONT_SIZES.sm,
-    color: COLORS.textSecondary,
+    color: COLORS.textLight,
     marginBottom: hp(1),
   },
   resendButton: {
@@ -258,7 +260,8 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   buttonDisabled: {
-    backgroundColor: COLORS.surface,
+    backgroundColor: COLORS.primaryLight,
+    opacity: 0.7,
     elevation: 1,
   },
   buttonText: {
@@ -268,4 +271,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default OTPScreen; 
+export default OTPScreen;

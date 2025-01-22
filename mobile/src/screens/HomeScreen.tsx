@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { COLORS } from '../theme/colors';
-import { TYPOGRAPHY } from '../theme/typography';
 
 const HomeScreen: React.FC = () => {
   return (
@@ -24,4 +23,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default HomeScreen; 
+export default HomeScreen;

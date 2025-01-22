@@ -57,10 +57,13 @@ export interface User {
 export interface SafeUser {
   id: string;
   phoneNumber: string;
+  email: string | null;
   firstName: string;
   lastName: string;
   isVerified: boolean;
   role: Role;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface AuthenticatedRequest extends Request {
@@ -70,11 +73,12 @@ export interface AuthenticatedRequest extends Request {
   };
 }
 
-export interface ApiResponse<T> {
+export interface ApiResponse<T = any> {
   success: boolean;
   data?: T;
   error?: string;
   errors?: Record<string, string>;
+  message?: string;
 }
 
 export interface TokenPayload {
@@ -120,4 +124,4 @@ export interface UpdateProfileRequest {
   firstName?: string;
   lastName?: string;
   email?: string;
-} 
+}

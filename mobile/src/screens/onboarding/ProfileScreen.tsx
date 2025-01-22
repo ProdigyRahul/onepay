@@ -8,6 +8,7 @@ import {
   StatusBar,
   ScrollView,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -28,7 +29,7 @@ type ProfileScreenNavigationProp = NativeStackNavigationProp<
 const ProfileScreen = () => {
   const navigation = useNavigation<ProfileScreenNavigationProp>();
   const dispatch = useAppDispatch();
-  const { isLoading, error } = useAppSelector((state) => state.onboarding);
+  const { isLoading } = useAppSelector((state) => state.onboarding);
 
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -36,9 +37,9 @@ const ProfileScreen = () => {
   const [panNumber, setPanNumber] = useState('');
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
 
-  const validateEmail = (email: string) => {
+  const validateEmail = (emailValue: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
+    return emailRegex.test(emailValue);
   };
 
   const validatePAN = (pan: string) => {
@@ -81,7 +82,7 @@ const ProfileScreen = () => {
             url: err.config?.url,
             method: err.config?.method,
             baseURL: err.config?.baseURL,
-          }
+          },
         });
       }
       dispatch(setError(errorMessage));
@@ -94,8 +95,8 @@ const ProfileScreen = () => {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={COLORS.white} />
-      
-      <ScrollView 
+
+      <ScrollView
         style={styles.content}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled">
@@ -110,12 +111,12 @@ const ProfileScreen = () => {
           {/* First Name Input */}
           <View style={styles.inputContainer}>
             <Text style={[styles.label, focusedInput === 'firstName' && styles.labelFocused]}>
-              First Name
+              First Name <Text style={styles.required}>*</Text>
             </Text>
             <TextInput
               style={[
                 styles.input,
-                focusedInput === 'firstName' && styles.inputFocused
+                focusedInput === 'firstName' && styles.inputFocused,
               ]}
               placeholder="Enter your first name"
               placeholderTextColor={COLORS.disabled}
@@ -130,12 +131,12 @@ const ProfileScreen = () => {
           {/* Last Name Input */}
           <View style={styles.inputContainer}>
             <Text style={[styles.label, focusedInput === 'lastName' && styles.labelFocused]}>
-              Last Name
+              Last Name <Text style={styles.required}>*</Text>
             </Text>
             <TextInput
               style={[
                 styles.input,
-                focusedInput === 'lastName' && styles.inputFocused
+                focusedInput === 'lastName' && styles.inputFocused,
               ]}
               placeholder="Enter your last name"
               placeholderTextColor={COLORS.disabled}
@@ -150,12 +151,12 @@ const ProfileScreen = () => {
           {/* Email Input */}
           <View style={styles.inputContainer}>
             <Text style={[styles.label, focusedInput === 'email' && styles.labelFocused]}>
-              Email Address
+              Email Address <Text style={styles.required}>*</Text>
             </Text>
             <TextInput
               style={[
                 styles.input,
-                focusedInput === 'email' && styles.inputFocused
+                focusedInput === 'email' && styles.inputFocused,
               ]}
               placeholder="Enter your email address"
               placeholderTextColor={COLORS.disabled}
@@ -167,17 +168,20 @@ const ProfileScreen = () => {
               autoCapitalize="none"
               autoComplete="email"
             />
+            <Text style={styles.caption}>
+              We'll verify this email address to ensure the security of your account
+            </Text>
           </View>
 
           {/* PAN Number Input */}
           <View style={styles.inputContainer}>
             <Text style={[styles.label, focusedInput === 'pan' && styles.labelFocused]}>
-              PAN Number
+              PAN Number <Text style={styles.required}>*</Text>
             </Text>
             <TextInput
               style={[
                 styles.input,
-                focusedInput === 'pan' && styles.inputFocused
+                focusedInput === 'pan' && styles.inputFocused,
               ]}
               placeholder="Enter your PAN number"
               placeholderTextColor={COLORS.disabled}
@@ -188,6 +192,9 @@ const ProfileScreen = () => {
               autoCapitalize="characters"
               maxLength={10}
             />
+            <Text style={styles.caption}>
+              Your PAN will be verified for KYC compliance and secure transactions
+            </Text>
           </View>
         </View>
 
@@ -196,9 +203,11 @@ const ProfileScreen = () => {
             style={[styles.button, isLoading && styles.buttonDisabled]}
             onPress={handleSubmit}
             disabled={isLoading}>
-            <Text style={styles.buttonText}>
-              {isLoading ? 'Saving...' : 'Continue'}
-            </Text>
+            {isLoading ? (
+              <ActivityIndicator size="small" color={COLORS.white} />
+            ) : (
+              <Text style={styles.buttonText}>Continue</Text>
+            )}
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -263,6 +272,17 @@ const styles = StyleSheet.create({
   inputFocused: {
     borderColor: COLORS.primary,
   },
+  caption: {
+    fontSize: FONT_SIZES.xs,
+    color: COLORS.textSecondary,
+    marginTop: hp(0.5),
+    fontFamily: FONTS.regular,
+    lineHeight: hp(1.8),
+  },
+  required: {
+    color: COLORS.error,
+    fontSize: FONT_SIZES.sm,
+  },
   bottomSection: {
     paddingHorizontal: wp(6),
     paddingVertical: hp(4),
@@ -286,4 +306,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ProfileScreen; 
+export default ProfileScreen;

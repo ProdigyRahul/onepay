@@ -9,7 +9,8 @@
     "start": "react-native start",
     "test": "jest",
     "pod-install": "cd ios && pod install",
-    "clean": "rm -rf node_modules && yarn cache clean && yarn install"
+    "clean": "rm -rf node_modules && yarn cache clean && yarn install",
+    "release": "cd android && ./gradlew assembleRelease"
   },
   "dependencies": {
     "@notifee/react-native": "^9.1.8",

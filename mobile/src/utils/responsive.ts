@@ -47,4 +47,4 @@ export const commonStyles = {
     paddingHorizontal: spacing(16),
   },
   // Add more common styles as needed
-}; 
+};

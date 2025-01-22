@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.verifyOTP = exports.generateOTP = void 0;
 const client_1 = require("@prisma/client");
 const jwt_1 = require("../utils/jwt");
+const twilioService_1 = require("../services/twilioService");
 const prisma = new client_1.PrismaClient();
 const generateOTP = async (req, res) => {
     try {
@@ -34,105 +35,93 @@ const generateOTP = async (req, res) => {
             });
             return;
         }
-        const code = Math.floor(100000 + Math.random() * 900000).toString();
-        const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
-        if (process.env.NODE_ENV === 'development') {
-            console.log('\x1b[33m%s\x1b[0m', '🔐 Development OTP:', code, 'for', phoneNumber);
-        }
-        const user = await prisma.user.upsert({
-            where: { phoneNumber },
-            update: {},
-            create: {
-                phoneNumber,
-                firstName: '',
-                lastName: '',
-            },
-        });
+        twilioService_1.twilioService.sendVerificationToken(phoneNumber);
         await prisma.oTP.create({
             data: {
-                code,
                 phoneNumber,
-                userId: user.id,
-                expiresAt,
+                code: 'twilio-verification',
+                expiresAt: new Date(Date.now() + 10 * 60 * 1000),
+                user: {
+                    connectOrCreate: {
+                        where: { phoneNumber },
+                        create: {
+                            phoneNumber,
+                            firstName: '',
+                            lastName: '',
+                            role: 'USER',
+                        },
+                    },
+                },
             },
         });
-        res.json({
+        res.status(200).json({
             success: true,
-            data: {
-                phoneNumber,
-            },
+            data: { phoneNumber },
+            message: 'Verification code request initiated'
         });
     }
     catch (error) {
-        console.error('Generate OTP Error:', error);
-        res.status(500).json({ success: false, error: 'Error generating OTP' });
+        console.error('Generate OTP error:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to initiate verification code'
+        });
     }
 };
 exports.generateOTP = generateOTP;
 const verifyOTP = async (req, res) => {
     try {
         const { phoneNumber, code } = req.body;
-        const otpRecord = await prisma.oTP.findFirst({
-            where: {
-                phoneNumber,
-                code,
-                isUsed: false,
-                expiresAt: {
-                    gt: new Date(),
-                },
-            },
-            orderBy: {
-                createdAt: 'desc',
-            },
-        });
-        if (!otpRecord) {
-            res.status(400).json({ success: false, error: 'Invalid or expired OTP' });
+        const isValid = await twilioService_1.twilioService.verifyToken(phoneNumber, code);
+        if (!isValid) {
+            res.status(400).json({
+                success: false,
+                error: 'Invalid or expired verification code'
+            });
             return;
         }
-        await prisma.oTP.update({
-            where: { id: otpRecord.id },
-            data: { isUsed: true },
-        });
-        await prisma.oTP.updateMany({
-            where: {
-                phoneNumber,
-                isUsed: false,
-                id: {
-                    not: otpRecord.id
-                }
-            },
-            data: {
-                isUsed: true
-            }
-        });
-        const user = await prisma.user.update({
+        const user = await prisma.user.upsert({
             where: { phoneNumber },
-            data: {
+            update: { isVerified: true },
+            create: {
+                phoneNumber,
+                firstName: '',
+                lastName: '',
                 isVerified: true,
+                role: 'USER',
             },
         });
         const token = (0, jwt_1.generateToken)({
             userId: user.id,
-            role: user.role,
+            role: user.role
         });
-        res.json({
+        await prisma.oTP.updateMany({
+            where: { phoneNumber },
+            data: { isUsed: true }
+        });
+        const safeUser = {
+            id: user.id,
+            phoneNumber: user.phoneNumber,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            isVerified: user.isVerified,
+            role: user.role,
+            createdAt: user.createdAt,
+            updatedAt: user.updatedAt
+        };
+        res.status(200).json({
             success: true,
-            data: {
-                token,
-                user: {
-                    id: user.id,
-                    phoneNumber: user.phoneNumber,
-                    firstName: user.firstName,
-                    lastName: user.lastName,
-                    isVerified: user.isVerified,
-                    role: user.role,
-                },
-            },
+            data: { token, user: safeUser },
+            message: 'OTP verified successfully'
         });
     }
     catch (error) {
-        console.error('Verify OTP Error:', error);
-        res.status(500).json({ success: false, error: 'Error verifying OTP' });
+        console.error('Verify OTP error:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to verify OTP'
+        });
     }
 };
 exports.verifyOTP = verifyOTP;

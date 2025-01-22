@@ -72,7 +72,7 @@ const AgeScreen = () => {
     }
   }, [age, shakeAnimation]);
 
-  const handleContinue = async () => {
+  const handleSubmit = async () => {
     if (!isValidAge()) {
       Alert.alert('Error', `Age must be between ${MIN_AGE} and ${MAX_AGE} years`);
       return;
@@ -96,58 +96,45 @@ const AgeScreen = () => {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={COLORS.white} />
-      
+
       <View style={styles.content}>
         <View style={styles.topSection}>
-          <Text style={styles.title}>What's your <Text style={styles.titleHighlight}>age</Text>?</Text>
+          <Text style={styles.title}>
+            What's your <Text style={styles.titleHighlight}>age</Text>?
+          </Text>
           <Text style={styles.subtitle}>
-            This helps us personalize your financial recommendations
+            We'll customize your financial journey based on your age group
           </Text>
         </View>
 
-        <View style={styles.inputSection}>
-          <Animated.View 
-            style={[
-              styles.ageDisplay,
-              !isValidAge() && age.length === 2 && styles.ageDisplayError,
-              { transform: [{ translateX: shakeAnimation }] }
-            ]}>
-            <Text style={[
-              styles.ageText,
-              !age && styles.agePlaceholder
-            ]}>
-              {age || '18'}
-            </Text>
+        <View style={styles.ageDisplayContainer}>
+          <Animated.View style={[styles.ageDisplay, { transform: [{ translateX: shakeAnimation }] }]}>
+            <Text style={styles.ageText}>{age || '--'}</Text>
+            <Text style={styles.yearText}>years</Text>
           </Animated.View>
-          {age.length > 0 && !isValidAge() && (
-            <Text style={styles.errorText}>
-              Please enter an age between {MIN_AGE} and {MAX_AGE}
+          {age && (
+            <Text style={[styles.validationText, isValidAge() ? styles.validText : styles.invalidText]}>
+              {isValidAge() ? '✓ Valid age' : `Age must be between ${MIN_AGE} and ${MAX_AGE} years`}
             </Text>
           )}
         </View>
 
-        <View style={styles.bottomSection}>
-          <TouchableOpacity
-            style={[
-              styles.button,
-              isValidAge() && styles.buttonActive
-            ]}
-            onPress={handleContinue}
-            disabled={!isValidAge() || isLoading}>
-            {isLoading ? (
-              <ActivityIndicator color={COLORS.white} size="small" />
-            ) : (
-              <Text style={[
-                styles.buttonText,
-                isValidAge() && styles.buttonTextActive
-              ]}>
-                Continue
-              </Text>
-            )}
-          </TouchableOpacity>
-
+        <View style={styles.keyboardContainer}>
           <CustomKeyboard onKeyPress={handleKeyPress} />
         </View>
+      </View>
+
+      <View style={styles.bottomSection}>
+        <TouchableOpacity
+          style={[styles.button, (!isValidAge() || isLoading) && styles.buttonDisabled]}
+          onPress={handleSubmit}
+          disabled={!isValidAge() || isLoading}>
+          {isLoading ? (
+            <ActivityIndicator size="small" color={COLORS.white} />
+          ) : (
+            <Text style={styles.buttonText}>Continue</Text>
+          )}
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -160,94 +147,84 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    paddingTop: StatusBar.currentHeight || 0,
+    paddingHorizontal: wp(6),
   },
   topSection: {
-    paddingTop: hp(4),
-    paddingHorizontal: wp(6),
-    marginBottom: hp(6),
+    marginTop: hp(4),
+    marginBottom: hp(4),
   },
   title: {
-    fontFamily: FONTS.regular,
-    fontSize: FONT_SIZES.xxxl,
-    color: COLORS.black,
-    marginBottom: hp(2),
-    textAlign: 'center',
+    fontSize: FONT_SIZES.xxl,
+    fontFamily: FONTS.bold,
+    color: COLORS.textPrimary,
+    marginBottom: hp(1),
   },
   titleHighlight: {
-    fontFamily: FONTS.bold,
     color: COLORS.primary,
   },
   subtitle: {
+    fontSize: FONT_SIZES.md,
     fontFamily: FONTS.regular,
-    fontSize: FONT_SIZES.lg,
     color: COLORS.textSecondary,
-    textAlign: 'center',
-    lineHeight: hp(3),
+    lineHeight: hp(2.8),
   },
-  inputSection: {
-    paddingHorizontal: wp(6),
+  ageDisplayContainer: {
     alignItems: 'center',
+    marginVertical: hp(4),
   },
   ageDisplay: {
-    width: wp(30),
-    height: hp(10),
-    backgroundColor: COLORS.surface,
-    borderRadius: wp(4),
-    borderWidth: 2,
-    borderColor: COLORS.surface,
-    justifyContent: 'center',
+    backgroundColor: COLORS.backgroundSecondary,
+    borderRadius: hp(2),
+    paddingVertical: hp(3),
+    paddingHorizontal: wp(8),
     alignItems: 'center',
     marginBottom: hp(2),
-    elevation: 2,
-  },
-  ageDisplayError: {
-    borderColor: '#FF3B30',
-    backgroundColor: '#FFE5E5',
   },
   ageText: {
     fontSize: FONT_SIZES.xxxl,
     fontFamily: FONTS.bold,
-    color: COLORS.black,
+    color: COLORS.primary,
+    marginBottom: hp(1),
   },
-  agePlaceholder: {
+  yearText: {
+    fontSize: FONT_SIZES.md,
+    fontFamily: FONTS.medium,
     color: COLORS.textSecondary,
-    opacity: 0.5,
   },
-  errorText: {
-    fontFamily: FONTS.regular,
+  validationText: {
     fontSize: FONT_SIZES.sm,
-    color: '#FF3B30',
+    fontFamily: FONTS.medium,
     marginTop: hp(1),
-    textAlign: 'center',
+  },
+  validText: {
+    color: COLORS.success,
+  },
+  invalidText: {
+    color: COLORS.error,
+  },
+  keyboardContainer: {
+    marginTop: hp(4),
   },
   bottomSection: {
     paddingHorizontal: wp(6),
-    paddingBottom: hp(4),
-    marginTop: 'auto',
+    paddingVertical: hp(4),
+    borderTopWidth: 1,
+    borderTopColor: COLORS.border,
   },
   button: {
-    width: '100%',
-    height: hp(6),
-    backgroundColor: COLORS.surface,
-    borderRadius: wp(2),
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 1,
-    marginBottom: hp(4),
-  },
-  buttonActive: {
     backgroundColor: COLORS.primary,
-    elevation: 2,
+    paddingVertical: hp(2),
+    borderRadius: hp(1),
+    alignItems: 'center',
+  },
+  buttonDisabled: {
+    opacity: 0.7,
   },
   buttonText: {
-    fontFamily: FONTS.medium,
-    fontSize: FONT_SIZES.lg,
-    color: COLORS.disabled,
-  },
-  buttonTextActive: {
     color: COLORS.white,
+    fontSize: FONT_SIZES.lg,
+    fontFamily: FONTS.medium,
   },
 });
 
-export default AgeScreen; 
+export default AgeScreen;

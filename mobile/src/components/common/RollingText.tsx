@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Text, Animated, StyleSheet, View } from 'react-native';
-import { COLORS } from '../../theme/colors';
 import { FONTS, FONT_SIZES } from '../../theme/typography';
-import { wp, hp } from '../../utils/responsive';
+import { hp } from '../../utils/responsive';
 
 interface RollingTextProps {
   messages: string[];
@@ -15,8 +14,8 @@ export const RollingText: React.FC<RollingTextProps> = ({
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [nextIndex, setNextIndex] = useState(1);
-  const translateY = new Animated.Value(0);
-  const opacity = new Animated.Value(1);
+  const translateY = useState(() => new Animated.Value(0))[0];
+  const opacity = useState(() => new Animated.Value(1))[0];
 
   useEffect(() => {
     const animate = () => {
@@ -49,7 +48,7 @@ export const RollingText: React.FC<RollingTextProps> = ({
 
     const intervalId = setInterval(animate, interval);
     return () => clearInterval(intervalId);
-  }, [messages, interval, nextIndex]);
+  }, [messages, interval, nextIndex, opacity, translateY]);
 
   const getNextMessage = () => {
     return messages[nextIndex];
@@ -94,4 +93,4 @@ const styles = StyleSheet.create({
     top: hp(4),
     left: 0,
   },
-}); 
+});

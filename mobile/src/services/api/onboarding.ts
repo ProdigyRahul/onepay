@@ -79,4 +79,4 @@ export const onboardingApi = {
     const response = await apiClient.get('/users/kyc');
     return response.data;
   },
-}; 
+};

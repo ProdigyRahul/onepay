@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   StatusBar,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -41,7 +42,7 @@ const LoginScreen = () => {
   }, [phoneNumber]);
 
   const handleContinue = async () => {
-    if (phoneNumber.length !== 10) return;
+    if (phoneNumber.length !== 10) {return;}
 
     try {
       setIsLoading(true);
@@ -97,13 +98,17 @@ const LoginScreen = () => {
             ]}
             disabled={phoneNumber.length !== 10 || isLoading}
             onPress={handleContinue}>
-            <Text
-              style={[
-                styles.continueText,
-                phoneNumber.length === 10 && styles.continueTextActive,
-              ]}>
-              {isLoading ? 'Sending OTP...' : 'Continue'}
-            </Text>
+            {isLoading ? (
+              <ActivityIndicator size="small" color={COLORS.white} />
+            ) : (
+              <Text
+                style={[
+                  styles.continueText,
+                  phoneNumber.length === 10 && styles.continueTextActive,
+                ]}>
+                Continue
+              </Text>
+            )}
           </TouchableOpacity>
 
           <Text style={styles.termsText}>
@@ -227,4 +232,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default LoginScreen; 
+export default LoginScreen;
