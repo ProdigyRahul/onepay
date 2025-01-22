@@ -35,12 +35,14 @@ const KycStatusScreen = () => {
       const response = await kycApi.getKycStatus();
 
       if (!response.success) {
-        throw new Error(response.error || 'Failed to get KYC status');
+        throw new Error(response.message || 'Failed to get KYC status');
       }
 
-      setKycStatus(response.data.status);
+      if (response.data?.status) {
+        setKycStatus(response.data.status);
+      }
 
-      if (response.data.status === 'VERIFIED') {
+      if (response.data?.status === 'VERIFIED') {
         // Small delay to show success message
         setTimeout(() => {
           navigation.reset({

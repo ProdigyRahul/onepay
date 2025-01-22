@@ -3,6 +3,7 @@ import { apiClient } from '../../api/client';
 interface KycUploadResponse {
   success: boolean;
   message: string;
+  error?: string;
   data?: {
     documentId: string;
     status: string;
@@ -12,8 +13,9 @@ interface KycUploadResponse {
 interface KycStatusResponse {
   success: boolean;
   message: string;
+  error?: string;
   data?: {
-    status: string;
+    status: 'PENDING_VERIFICATION' | 'VERIFIED' | 'REJECTED';
     documents: {
       type: string;
       status: string;
