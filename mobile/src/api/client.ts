@@ -18,6 +18,14 @@ apiClient.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
+    // Handle FormData content type
+    if (config.data instanceof FormData) {
+      config.headers['Content-Type'] = 'multipart/form-data';
+      // Prevent axios from trying to JSON stringify FormData
+      config.transformRequest = [(data) => data];
+    }
+
     return config;
   },
   (error) => {

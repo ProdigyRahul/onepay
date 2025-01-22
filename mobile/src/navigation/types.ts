@@ -12,5 +12,8 @@ export type RootStackParamList = {
   OnboardingIncome: undefined;
   OnboardingSpending: undefined;
   OnboardingSavings: undefined;
+  OnboardingKyc: undefined;
+  OnboardingKycDocument: undefined;
+  OnboardingKycStatus: undefined;
   Home: undefined;
 };

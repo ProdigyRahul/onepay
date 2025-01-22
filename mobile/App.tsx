@@ -25,6 +25,7 @@ const App = () => {
     // Check for stored auth data on app launch
     const initializeAuth = async () => {
       const token = StorageUtils.getAuthToken();
+      console.log('Token:', token);
       const userData = StorageUtils.getUserData();
 
       if (token && userData) {

@@ -91,27 +91,8 @@ const SpendingScreen = () => {
       dispatch(setSpending({ habit: selectedSpending, percentage: 0 }));
       console.log('Spending habits updated successfully');
 
-      // Small delay to ensure backend state is updated
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      // Get final onboarding status
-      console.log('Checking onboarding status...');
-      const statusResponse = await onboardingApi.getOnboardingStatus();
-      console.log('Onboarding status response:', statusResponse);
-
-      if (!statusResponse.success) {
-        throw new Error('Failed to get onboarding status');
-      }
-
-      if (statusResponse.data.spendingHabitsSet && statusResponse.data.onboardingComplete) {
-        navigation.reset({
-          index: 0,
-          routes: [{ name: 'Home' }],
-        });
-      } else {
-        console.error('Onboarding not complete:', statusResponse.data);
-        Alert.alert('Error', 'Failed to complete onboarding. Please try again.');
-      }
+      // Navigate to KYC screen
+      navigation.navigate('OnboardingKycDocument');
 
     } catch (err) {
       console.error('Error in handleSubmit:', err);
@@ -223,7 +204,7 @@ const styles = StyleSheet.create({
   subtitle: {
     fontFamily: FONTS.regular,
     fontSize: FONT_SIZES.md,
-    color: COLORS.textSecondary,
+    color: COLORS.textLight,
     lineHeight: hp(2.5),
   },
   optionsContainer: {
@@ -275,7 +256,7 @@ const styles = StyleSheet.create({
   optionDescription: {
     fontFamily: FONTS.regular,
     fontSize: FONT_SIZES.sm,
-    color: COLORS.textSecondary,
+    color: COLORS.textLight,
   },
   bottomSection: {
     paddingHorizontal: wp(6),

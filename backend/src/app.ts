@@ -6,6 +6,7 @@ import { PrismaClient } from '@prisma/client';
 import userRoutes from './routes/userRoutes';
 import authRoutes from './routes/authRoutes';
 import walletRoutes from './routes/walletRoutes';
+import kycRoutes from './routes/kycRoutes';
 import { apiLimiter } from './middleware/rateLimiter';
 import onboardingRoutes from './routes/onboardingRoutes';
 import { rateLimit } from 'express-rate-limit';
@@ -38,6 +39,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/wallets', walletRoutes);
 app.use('/api/onboarding', onboardingRoutes);
+app.use('/api/kyc', kycRoutes);
 
 // Root route with welcome message
 app.get('/', (_req: Request, res: Response) => {

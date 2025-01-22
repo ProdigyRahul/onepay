@@ -321,7 +321,7 @@ exports.onboardingController = {
                 ((_c = user.financialProfile) === null || _c === void 0 ? void 0 : _c.primaryGoal) &&
                 ((_d = user.financialProfile) === null || _d === void 0 ? void 0 : _d.incomeRange) &&
                 ((_e = user.financialProfile) === null || _e === void 0 ? void 0 : _e.spendingHabit) &&
-                ((_f = user.financialProfile) === null || _f === void 0 ? void 0 : _f.targetSpendingPercentage) !== null);
+                ((_f = user.kyc) === null || _f === void 0 ? void 0 : _f.status) === 'VERIFIED');
             if (isOnboardingComplete) {
                 await prisma.user.update({
                     where: { id: userId },
@@ -357,7 +357,7 @@ exports.onboardingController = {
         }
     },
     getStatus: async (req, res) => {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m;
         try {
             const userId = req.user.id;
             const user = await prisma.user.findUnique({
@@ -378,14 +378,16 @@ exports.onboardingController = {
                 ((_c = user.kyc) === null || _c === void 0 ? void 0 : _c.dateOfBirth) &&
                 ((_d = user.financialProfile) === null || _d === void 0 ? void 0 : _d.primaryGoal) &&
                 ((_e = user.financialProfile) === null || _e === void 0 ? void 0 : _e.incomeRange) &&
-                ((_f = user.financialProfile) === null || _f === void 0 ? void 0 : _f.spendingHabit));
+                ((_f = user.financialProfile) === null || _f === void 0 ? void 0 : _f.spendingHabit) &&
+                ((_g = user.kyc) === null || _g === void 0 ? void 0 : _g.status) === 'VERIFIED');
             const status = {
-                profileCompleted: !!(user.firstName && user.lastName && user.email && ((_g = user.kyc) === null || _g === void 0 ? void 0 : _g.panNumber)),
-                ageVerified: !!((_h = user.kyc) === null || _h === void 0 ? void 0 : _h.dateOfBirth),
-                primaryGoalSet: !!((_j = user.financialProfile) === null || _j === void 0 ? void 0 : _j.primaryGoal),
-                incomeRangeSet: !!((_k = user.financialProfile) === null || _k === void 0 ? void 0 : _k.incomeRange),
+                profileCompleted: !!(user.firstName && user.lastName && user.email && ((_h = user.kyc) === null || _h === void 0 ? void 0 : _h.panNumber)),
+                ageVerified: !!((_j = user.kyc) === null || _j === void 0 ? void 0 : _j.dateOfBirth),
+                primaryGoalSet: !!((_k = user.financialProfile) === null || _k === void 0 ? void 0 : _k.primaryGoal),
+                incomeRangeSet: !!((_l = user.financialProfile) === null || _l === void 0 ? void 0 : _l.incomeRange),
                 spendingHabitsSet,
                 onboardingComplete,
+                kycStatus: ((_m = user.kyc) === null || _m === void 0 ? void 0 : _m.status) || null,
             };
             res.json({
                 success: true,

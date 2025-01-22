@@ -225,7 +225,7 @@ const styles = StyleSheet.create({
   subtitle: {
     fontFamily: FONTS.regular,
     fontSize: FONT_SIZES.md,
-    color: COLORS.textSecondary,
+    color: COLORS.textLight,
     lineHeight: hp(3),
   },
   optionsContainer: {
@@ -271,7 +271,7 @@ const styles = StyleSheet.create({
   optionDescription: {
     fontFamily: FONTS.regular,
     fontSize: FONT_SIZES.sm,
-    color: COLORS.textSecondary,
+    color: COLORS.textLight,
   },
   bottomSection: {
     paddingHorizontal: wp(6),

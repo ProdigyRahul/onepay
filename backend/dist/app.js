@@ -12,6 +12,7 @@ const client_1 = require("@prisma/client");
 const userRoutes_1 = __importDefault(require("./routes/userRoutes"));
 const authRoutes_1 = __importDefault(require("./routes/authRoutes"));
 const walletRoutes_1 = __importDefault(require("./routes/walletRoutes"));
+const kycRoutes_1 = __importDefault(require("./routes/kycRoutes"));
 const rateLimiter_1 = require("./middleware/rateLimiter");
 const onboardingRoutes_1 = __importDefault(require("./routes/onboardingRoutes"));
 const express_rate_limit_1 = require("express-rate-limit");
@@ -32,6 +33,7 @@ app.use('/api/auth', authRoutes_1.default);
 app.use('/api/users', userRoutes_1.default);
 app.use('/api/wallets', walletRoutes_1.default);
 app.use('/api/onboarding', onboardingRoutes_1.default);
+app.use('/api/kyc', kycRoutes_1.default);
 app.get('/', (_req, res) => {
     const html = `
     <!DOCTYPE html>
