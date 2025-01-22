@@ -7,6 +7,7 @@ import {
   StatusBar,
   Alert,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -34,7 +35,6 @@ const NotificationsScreen = () => {
     await notifee.getNotificationSettings();
 
     if (Platform.OS === 'android') {
-      // Check for battery optimization
       const batteryOptimizationEnabled = await notifee.isBatteryOptimizationEnabled();
       if (batteryOptimizationEnabled) {
         Alert.alert(
@@ -53,7 +53,6 @@ const NotificationsScreen = () => {
         );
       }
 
-      // Check for power manager restrictions
       const powerManagerInfo = await notifee.getPowerManagerInfo();
       if (powerManagerInfo.activity) {
         Alert.alert(
@@ -77,21 +76,17 @@ const NotificationsScreen = () => {
   const requestPermissions = async () => {
     try {
       setIsLoading(true);
-
-      // Request permissions
       const settings = await notifee.requestPermission();
 
       if (settings.authorizationStatus >= AuthorizationStatus.AUTHORIZED) {
-        // Create a channel for Android
         if (Platform.OS === 'android') {
           await notifee.createChannel({
             id: 'default',
             name: 'Default Channel',
-            importance: 4, // High importance
+            importance: 4,
           });
         }
 
-        // Display a test notification
         await notifee.displayNotification({
           title: 'Welcome to OnePay! ',
           body: 'You will now receive important updates about your transactions.',
@@ -103,7 +98,6 @@ const NotificationsScreen = () => {
           },
         });
 
-        // Navigate to profile screen
         navigation.navigate('OnboardingProfile');
       } else {
         Alert.alert(
@@ -113,11 +107,7 @@ const NotificationsScreen = () => {
             {
               text: 'Open Settings',
               onPress: async () => {
-                if (Platform.OS === 'ios') {
-                  await notifee.openNotificationSettings();
-                } else {
-                  await notifee.openNotificationSettings();
-                }
+                await notifee.openNotificationSettings();
               },
             },
             {
@@ -139,58 +129,80 @@ const NotificationsScreen = () => {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={COLORS.white} />
-
       <View style={styles.content}>
-        <View style={styles.topSection}>
-          <Text style={styles.title}>Stay Updated</Text>
+        <View style={styles.header}>
+          <Text style={styles.title}>Enable <Text style={styles.titleHighlight}>Notifications</Text></Text>
           <Text style={styles.subtitle}>
-            Get instant notifications about your transactions, rewards, and important account activities
+            Stay informed about your transactions and account activities in real-time
           </Text>
         </View>
 
-        <View style={styles.illustrationContainer}>
-          <MaterialCommunityIcons
-            name="bell-ring-outline"
-            size={wp(25)}
-            color={COLORS.primary}
-          />
-        </View>
-
-        <View style={styles.permissionsContainer}>
-          <View style={styles.permissionItem}>
-            <View style={styles.permissionIcon}>
+        <View style={styles.featuresContainer}>
+          <TouchableOpacity style={styles.featureItem} activeOpacity={0.8}>
+            <View style={styles.featureIconContainer}>
               <MaterialCommunityIcons
-                name="bell-badge-outline"
+                name="currency-usd"
                 size={wp(6)}
                 color={COLORS.primary}
               />
             </View>
-            <View style={styles.permissionInfo}>
-              <Text style={styles.permissionTitle}>Push Notifications</Text>
-              <Text style={styles.permissionLabel}>
-                Stay informed about your transactions and account security
+            <View style={styles.featureContent}>
+              <Text style={styles.featureTitle}>Transaction Updates</Text>
+              <Text style={styles.featureDescription}>
+                Get instant alerts for all your payments and transfers
               </Text>
-              <View style={styles.recommendedTag}>
-                <Text style={styles.recommendedText}>Recommended</Text>
-              </View>
             </View>
-          </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.featureItem} activeOpacity={0.8}>
+            <View style={styles.featureIconContainer}>
+              <MaterialCommunityIcons
+                name="shield-check"
+                size={wp(6)}
+                color={COLORS.success}
+              />
+            </View>
+            <View style={styles.featureContent}>
+              <Text style={styles.featureTitle}>Security Alerts</Text>
+              <Text style={styles.featureDescription}>
+                Stay protected with real-time security notifications
+              </Text>
+            </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.featureItem} activeOpacity={0.8}>
+            <View style={styles.featureIconContainer}>
+              <MaterialCommunityIcons
+                name="gift"
+                size={wp(6)}
+                color={COLORS.warning}
+              />
+            </View>
+            <View style={styles.featureContent}>
+              <Text style={styles.featureTitle}>Special Offers</Text>
+              <Text style={styles.featureDescription}>
+                Never miss out on rewards and exclusive deals
+              </Text>
+            </View>
+          </TouchableOpacity>
         </View>
 
         <View style={styles.bottomSection}>
           <TouchableOpacity
-            style={styles.button}
+            style={[styles.button, isLoading && styles.buttonDisabled]}
             onPress={requestPermissions}
             disabled={isLoading}>
-            <Text style={styles.buttonText}>
-              {isLoading ? 'Setting up...' : 'Enable Notifications'}
-            </Text>
+            {isLoading ? (
+              <ActivityIndicator size="small" color={COLORS.white} />
+            ) : (
+              <Text style={styles.buttonText}>Enable Notifications</Text>
+            )}
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.skipButton}
             onPress={() => navigation.navigate('OnboardingProfile')}>
-            <Text style={styles.skipButtonText}>Skip for now</Text>
+            <Text style={styles.skipButtonText}>I'll do this later</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -205,43 +217,44 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    paddingTop: StatusBar.currentHeight || 0,
   },
-  topSection: {
+  header: {
     paddingTop: hp(4),
     paddingHorizontal: wp(6),
     marginBottom: hp(4),
   },
   title: {
-    fontFamily: FONTS.bold,
+    fontFamily: FONTS.regular,
     fontSize: FONT_SIZES.xxxl,
-    color: COLORS.primary,
+    color: COLORS.text,
     marginBottom: hp(2),
+  },
+  titleHighlight: {
+    fontFamily: FONTS.bold,
+    color: COLORS.primary,
   },
   subtitle: {
     fontFamily: FONTS.regular,
     fontSize: FONT_SIZES.md,
-    color: COLORS.textSecondary,
-    lineHeight: hp(3),
+    color: COLORS.textLight,
+    lineHeight: hp(2.8),
   },
-  illustrationContainer: {
-    alignItems: 'center',
-    marginVertical: hp(4),
-    backgroundColor: '#F0F7FF',
-    paddingVertical: hp(4),
-  },
-  permissionsContainer: {
+  featuresContainer: {
     paddingHorizontal: wp(6),
+    marginBottom: hp(4),
   },
-  permissionItem: {
+  featureItem: {
     flexDirection: 'row',
-    backgroundColor: COLORS.surface,
-    borderRadius: wp(4),
+    alignItems: 'center',
     padding: wp(4),
+    backgroundColor: COLORS.white,
+    borderRadius: wp(4),
+    borderWidth: 1.5,
+    borderColor: COLORS.border,
+    elevation: 2,
     marginBottom: hp(2),
-    elevation: 1,
   },
-  permissionIcon: {
+  featureIconContainer: {
     width: wp(12),
     height: wp(12),
     borderRadius: wp(6),
@@ -250,38 +263,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: wp(4),
   },
-  permissionInfo: {
+  featureContent: {
     flex: 1,
   },
-  permissionTitle: {
+  featureTitle: {
     fontFamily: FONTS.medium,
     fontSize: FONT_SIZES.md,
-    color: COLORS.black,
-    marginBottom: hp(1),
+    color: COLORS.text,
+    marginBottom: hp(0.5),
   },
-  permissionLabel: {
+  featureDescription: {
     fontFamily: FONTS.regular,
     fontSize: FONT_SIZES.sm,
-    color: COLORS.textSecondary,
-    marginBottom: hp(1),
-  },
-  recommendedTag: {
-    backgroundColor: '#E3F2FD',
-    paddingHorizontal: wp(3),
-    paddingVertical: hp(0.5),
-    borderRadius: wp(2),
-    alignSelf: 'flex-start',
-  },
-  recommendedText: {
-    fontFamily: FONTS.medium,
-    fontSize: FONT_SIZES.xs,
-    color: COLORS.primary,
+    color: COLORS.textLight,
+    lineHeight: hp(2.2),
   },
   bottomSection: {
-    flex: 1,
-    justifyContent: 'flex-end',
     paddingHorizontal: wp(6),
     paddingBottom: hp(4),
+    marginTop: 'auto',
   },
   button: {
     width: '100%',
@@ -293,6 +293,11 @@ const styles = StyleSheet.create({
     elevation: 2,
     marginBottom: hp(2),
   },
+  buttonDisabled: {
+    backgroundColor: COLORS.primaryLight,
+    opacity: 0.7,
+    elevation: 1,
+  },
   buttonText: {
     fontFamily: FONTS.medium,
     fontSize: FONT_SIZES.lg,
@@ -300,14 +305,14 @@ const styles = StyleSheet.create({
   },
   skipButton: {
     width: '100%',
-    height: hp(6),
+    height: hp(5),
     justifyContent: 'center',
     alignItems: 'center',
   },
   skipButtonText: {
     fontFamily: FONTS.medium,
     fontSize: FONT_SIZES.md,
-    color: COLORS.textSecondary,
+    color: COLORS.textLight,
   },
 });
 

@@ -7,10 +7,13 @@ const prisma = new client_1.PrismaClient();
 const sanitizeUser = (user) => ({
     id: user.id,
     phoneNumber: user.phoneNumber,
+    email: user.email,
     firstName: user.firstName,
     lastName: user.lastName,
     isVerified: user.isVerified,
-    role: user.role
+    role: user.role,
+    createdAt: user.createdAt,
+    updatedAt: user.updatedAt
 });
 const createUser = async (req, res) => {
     try {

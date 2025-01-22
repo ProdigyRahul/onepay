@@ -8,6 +8,7 @@ import {
   StatusBar,
   ScrollView,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -110,7 +111,7 @@ const ProfileScreen = () => {
           {/* First Name Input */}
           <View style={styles.inputContainer}>
             <Text style={[styles.label, focusedInput === 'firstName' && styles.labelFocused]}>
-              First Name
+              First Name <Text style={styles.required}>*</Text>
             </Text>
             <TextInput
               style={[
@@ -130,7 +131,7 @@ const ProfileScreen = () => {
           {/* Last Name Input */}
           <View style={styles.inputContainer}>
             <Text style={[styles.label, focusedInput === 'lastName' && styles.labelFocused]}>
-              Last Name
+              Last Name <Text style={styles.required}>*</Text>
             </Text>
             <TextInput
               style={[
@@ -150,7 +151,7 @@ const ProfileScreen = () => {
           {/* Email Input */}
           <View style={styles.inputContainer}>
             <Text style={[styles.label, focusedInput === 'email' && styles.labelFocused]}>
-              Email Address
+              Email Address <Text style={styles.required}>*</Text>
             </Text>
             <TextInput
               style={[
@@ -167,12 +168,15 @@ const ProfileScreen = () => {
               autoCapitalize="none"
               autoComplete="email"
             />
+            <Text style={styles.caption}>
+              We'll verify this email address to ensure the security of your account
+            </Text>
           </View>
 
           {/* PAN Number Input */}
           <View style={styles.inputContainer}>
             <Text style={[styles.label, focusedInput === 'pan' && styles.labelFocused]}>
-              PAN Number
+              PAN Number <Text style={styles.required}>*</Text>
             </Text>
             <TextInput
               style={[
@@ -188,6 +192,9 @@ const ProfileScreen = () => {
               autoCapitalize="characters"
               maxLength={10}
             />
+            <Text style={styles.caption}>
+              Your PAN will be verified for KYC compliance and secure transactions
+            </Text>
           </View>
         </View>
 
@@ -196,9 +203,11 @@ const ProfileScreen = () => {
             style={[styles.button, isLoading && styles.buttonDisabled]}
             onPress={handleSubmit}
             disabled={isLoading}>
-            <Text style={styles.buttonText}>
-              {isLoading ? 'Saving...' : 'Continue'}
-            </Text>
+            {isLoading ? (
+              <ActivityIndicator size="small" color={COLORS.white} />
+            ) : (
+              <Text style={styles.buttonText}>Continue</Text>
+            )}
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -262,6 +271,17 @@ const styles = StyleSheet.create({
   },
   inputFocused: {
     borderColor: COLORS.primary,
+  },
+  caption: {
+    fontSize: FONT_SIZES.xs,
+    color: COLORS.textSecondary,
+    marginTop: hp(0.5),
+    fontFamily: FONTS.regular,
+    lineHeight: hp(1.8),
+  },
+  required: {
+    color: COLORS.error,
+    fontSize: FONT_SIZES.sm,
   },
   bottomSection: {
     paddingHorizontal: wp(6),
