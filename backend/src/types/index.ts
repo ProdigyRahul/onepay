@@ -1,5 +1,6 @@
 import { Request } from 'express';
 import { Role, KYCStatus } from '@prisma/client';
+import { ParamsDictionary } from 'express-serve-static-core';
 
 export type IncomeRange =
   | 'RANGE_0_25000'
@@ -66,11 +67,17 @@ export interface SafeUser {
   updatedAt: Date;
 }
 
-export interface AuthenticatedRequest extends Request {
-  user: {
-    id: string;
-    role: Role;
-  };
+export interface AuthenticatedUser {
+  id: string;
+  role: Role;
+}
+
+export interface AuthenticatedRequest extends Request<ParamsDictionary> {
+  user: AuthenticatedUser;
+}
+
+export interface FileRequest extends AuthenticatedRequest {
+  file?: Express.Multer.File;
 }
 
 export interface ApiResponse<T = any> {

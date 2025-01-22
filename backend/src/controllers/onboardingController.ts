@@ -360,7 +360,7 @@ export const onboardingController = {
         user.financialProfile?.primaryGoal &&
         user.financialProfile?.incomeRange &&
         user.financialProfile?.spendingHabit &&
-        user.financialProfile?.targetSpendingPercentage !== null
+        user.kyc?.status === 'VERIFIED' // Add KYC verification check
       );
 
       // Update user's onboarding status if complete
@@ -430,7 +430,8 @@ export const onboardingController = {
         user.kyc?.dateOfBirth &&
         user.financialProfile?.primaryGoal &&
         user.financialProfile?.incomeRange &&
-        user.financialProfile?.spendingHabit
+        user.financialProfile?.spendingHabit &&
+        user.kyc?.status === 'VERIFIED' // Add KYC verification check
       );
 
       const status = {
@@ -440,6 +441,7 @@ export const onboardingController = {
         incomeRangeSet: !!user.financialProfile?.incomeRange,
         spendingHabitsSet,
         onboardingComplete,
+        kycStatus: user.kyc?.status || null, // Add KYC status to response
       };
 
       res.json({

@@ -12,9 +12,12 @@ import AgeScreen from '../screens/onboarding/AgeScreen';
 import PurposeScreen from '../screens/onboarding/PurposeScreen';
 import IncomeScreen from '../screens/onboarding/IncomeScreen';
 import SpendingScreen from '../screens/onboarding/SpendingScreen';
+import KycDocumentScreen from '../screens/onboarding/KycDocumentScreen';
+import KycStatusScreen from '../screens/onboarding/KycStatusScreen';
 import { COLORS } from '../theme/colors';
 import { useAppSelector } from '../store/store';
 import { onboardingApi } from '../services/api/onboarding';
+import { kycApi } from '../services/api/kyc';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -27,14 +30,25 @@ const AppNavigator = () => {
     const initializeApp = async () => {
       try {
         if (token && user) {
-          // Check onboarding status
-          const statusResponse = await onboardingApi.getOnboardingStatus();
-          const status = statusResponse.data;
+          try {
+            // First check onboarding status
+            const statusResponse = await onboardingApi.getOnboardingStatus();
+            const status = statusResponse.data;
+            console.log('Onboarding status:', status);
 
-          if (status.onboardingComplete) {
-            setInitialRoute('Home');
-          } else {
-            // Set initial route based on incomplete onboarding step
+            // Only check KYC status if profile is completed
+            let kycStatus = null;
+            if (status.profileCompleted) {
+              try {
+                const kycResponse = await kycApi.getKycStatus();
+                kycStatus = kycResponse.data;
+                console.log('KYC status:', kycStatus);
+              } catch (error) {
+                console.log('Error getting KYC status:', error);
+              }
+            }
+
+            // First handle non-KYC onboarding steps
             if (!status.profileCompleted) {
               setInitialRoute('NotificationsPermission');
             } else if (!status.ageVerified) {
@@ -43,9 +57,27 @@ const AppNavigator = () => {
               setInitialRoute('OnboardingPurpose');
             } else if (!status.incomeRangeSet) {
               setInitialRoute('OnboardingIncome');
-            } else {
+            } else if (!status.spendingHabitsSet) {
               setInitialRoute('OnboardingSpending');
             }
+            // Then handle KYC flow
+            else if (kycStatus?.status === 'PENDING_VERIFICATION') {
+              setInitialRoute('OnboardingKycStatus');
+            } else if (kycStatus?.status === 'REJECTED') {
+              setInitialRoute('OnboardingKycDocument');
+            } else if (!kycStatus?.status || kycStatus.status === null) {
+              setInitialRoute('OnboardingKycDocument');
+            }
+            // Finally, if everything is complete and KYC is verified
+            else if (status.onboardingComplete && kycStatus.status === 'VERIFIED') {
+              setInitialRoute('Home');
+            } else {
+              // Fallback to KYC document screen
+              setInitialRoute('OnboardingKycDocument');
+            }
+          } catch (error) {
+            console.error('Error checking status:', error);
+            setInitialRoute('Login');
           }
         } else {
           setInitialRoute('Login');
@@ -81,7 +113,7 @@ const AppNavigator = () => {
             backgroundColor: COLORS.backgroundPrimary,
           },
           headerTitleStyle: {
-            color: COLORS.textPrimary,
+            color: COLORS.primary,
           },
         }}
       >
@@ -123,6 +155,16 @@ const AppNavigator = () => {
         <Stack.Screen
           name="OnboardingSpending"
           component={SpendingScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="OnboardingKycDocument"
+          component={KycDocumentScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="OnboardingKycStatus"
+          component={KycStatusScreen}
           options={{ headerShown: false }}
         />
         <Stack.Screen
