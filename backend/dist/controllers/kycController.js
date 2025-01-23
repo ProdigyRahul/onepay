@@ -1,12 +1,9 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.kycController = void 0;
 const client_1 = require("@prisma/client");
 const apiError_1 = require("../utils/apiError");
-const promises_1 = __importDefault(require("fs/promises"));
+const storageService_1 = require("../services/storageService");
 const prisma = new client_1.PrismaClient();
 exports.kycController = {
     uploadPanCard: async (req, res) => {
@@ -16,6 +13,7 @@ exports.kycController = {
             if (!file) {
                 throw new apiError_1.ApiError(400, 'No file uploaded');
             }
+            const storageResponse = await storageService_1.storageService.uploadFile(file);
             const existingKyc = await prisma.kYC.findUnique({
                 where: { userId },
                 select: {
@@ -27,13 +25,13 @@ exports.kycController = {
                 where: { userId },
                 create: {
                     userId,
-                    panCardPath: file.path,
+                    panCardPath: storageResponse.file.url,
                     status: client_1.KYCStatus.PENDING_VERIFICATION,
                     panNumber: (existingKyc === null || existingKyc === void 0 ? void 0 : existingKyc.panNumber) || 'PENDING',
                     dateOfBirth: (existingKyc === null || existingKyc === void 0 ? void 0 : existingKyc.dateOfBirth) || new Date(),
                 },
                 update: {
-                    panCardPath: file.path,
+                    panCardPath: storageResponse.file.url,
                     status: client_1.KYCStatus.PENDING_VERIFICATION,
                     verifiedAt: null,
                     remarks: null,
@@ -46,95 +44,102 @@ exports.kycController = {
             res.json({
                 success: true,
                 data: {
-                    message: 'PAN card uploaded successfully',
                     status: updatedKyc.status,
+                    documentUrl: updatedKyc.panCardPath,
                 },
             });
         }
         catch (error) {
-            if (req.file) {
-                await promises_1.default.unlink(req.file.path).catch(console.error);
+            console.error('Error in uploadPanCard:', error);
+            if (error instanceof apiError_1.ApiError) {
+                throw error;
             }
-            throw error;
+            throw new apiError_1.ApiError(500, 'Failed to upload PAN card');
         }
     },
     getKycStatus: async (req, res) => {
-        const userId = req.user.id;
-        const kyc = await prisma.kYC.findUnique({
-            where: { userId },
-            select: {
-                status: true,
-                panNumber: true,
-                dateOfBirth: true,
-                panCardPath: true,
-                remarks: true,
-            },
-        });
-        if (!kyc) {
+        try {
+            const userId = req.user.id;
+            const kyc = await prisma.kYC.findUnique({
+                where: { userId },
+                select: {
+                    status: true,
+                    panCardPath: true,
+                    panNumber: true,
+                    dateOfBirth: true,
+                    verifiedAt: true,
+                    remarks: true,
+                },
+            });
+            if (!kyc) {
+                res.json({
+                    success: true,
+                    data: {
+                        status: client_1.KYCStatus.PENDING_VERIFICATION,
+                        documents: [],
+                    },
+                });
+                return;
+            }
             res.json({
                 success: true,
                 data: {
-                    status: null,
-                    panNumber: null,
-                    dateOfBirth: null,
-                    hasDocument: false,
-                    remarks: null,
+                    status: kyc.status,
+                    documents: [
+                        {
+                            type: 'PAN_CARD',
+                            status: kyc.status,
+                            documentUrl: kyc.panCardPath,
+                            panNumber: kyc.panNumber,
+                            dateOfBirth: kyc.dateOfBirth,
+                            verifiedAt: kyc.verifiedAt,
+                            remarks: kyc.remarks,
+                        },
+                    ],
                 },
             });
-            return;
         }
-        res.json({
-            success: true,
-            data: {
-                status: kyc.status,
-                panNumber: kyc.panNumber,
-                dateOfBirth: kyc.dateOfBirth,
-                hasDocument: !!kyc.panCardPath,
-                remarks: kyc.remarks,
-            },
-        });
+        catch (error) {
+            console.error('Error in getKycStatus:', error);
+            throw new apiError_1.ApiError(500, 'Failed to get KYC status');
+        }
     },
     updateKycStatus: async (req, res) => {
-        const { userId, status, remarks } = req.body;
-        if (req.user.role !== client_1.Role.ADMIN) {
-            throw new apiError_1.ApiError(403, 'Only admins can update KYC status');
-        }
-        if (!Object.values(client_1.KYCStatus).includes(status)) {
-            throw new apiError_1.ApiError(400, 'Invalid KYC status');
-        }
-        const kyc = await prisma.kYC.findUnique({
-            where: { userId },
-            select: {
-                id: true,
-                status: true,
-            },
-        });
-        if (!kyc) {
-            throw new apiError_1.ApiError(404, 'KYC record not found');
-        }
-        const updatedKyc = await prisma.kYC.update({
-            where: { userId },
-            data: {
-                status,
-                remarks,
-                verifiedAt: status === client_1.KYCStatus.VERIFIED ? new Date() : null,
-            },
-        });
-        if (status === client_1.KYCStatus.VERIFIED) {
-            await prisma.user.update({
-                where: { id: userId },
+        try {
+            const adminId = req.user.id;
+            const { userId, status, remarks } = req.body;
+            const admin = await prisma.user.findUnique({
+                where: { id: adminId },
+                select: { role: true },
+            });
+            if ((admin === null || admin === void 0 ? void 0 : admin.role) !== client_1.Role.ADMIN) {
+                throw new apiError_1.ApiError(403, 'Only admins can update KYC status');
+            }
+            const updatedKyc = await prisma.kYC.update({
+                where: { userId },
                 data: {
-                    onboardingComplete: true,
+                    status,
+                    remarks,
+                    verifiedAt: status === client_1.KYCStatus.VERIFIED ? new Date() : null,
+                },
+            });
+            res.json({
+                success: true,
+                data: {
+                    userId,
+                    status: updatedKyc.status,
+                    remarks: updatedKyc.remarks,
+                    verifiedAt: updatedKyc.verifiedAt,
                 },
             });
         }
-        res.json({
-            success: true,
-            data: {
-                message: 'KYC status updated successfully',
-                status: updatedKyc.status,
-            },
-        });
+        catch (error) {
+            console.error('Error in updateKycStatus:', error);
+            if (error instanceof apiError_1.ApiError) {
+                throw error;
+            }
+            throw new apiError_1.ApiError(500, 'Failed to update KYC status');
+        }
     },
 };
 //# sourceMappingURL=kycController.js.map
