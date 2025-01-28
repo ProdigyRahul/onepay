@@ -1,10 +1,8 @@
 import { Response } from 'express';
-import { PrismaClient, Prisma, IncomeRange as PrismaIncomeRange, SpendingHabit, UserGoal } from '@prisma/client';
+import { Prisma, IncomeRange as PrismaIncomeRange, SpendingHabit, UserGoal } from '@prisma/client';
 import { ApiError } from '../utils/apiError';
 import { AuthenticatedRequest, ProfileData, FinancialProfileData, ApiResponse } from '../types';
-
-const prisma = new PrismaClient();
-
+import { prisma } from '../lib/prisma';
 export const onboardingController = {
   // Update user profile (name, email, PAN)
   updateProfile: async (

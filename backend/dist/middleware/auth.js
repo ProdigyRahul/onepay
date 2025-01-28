@@ -3,8 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.authorize = exports.authenticate = void 0;
 const jwt_1 = require("../utils/jwt");
 const apiError_1 = require("../utils/apiError");
-const client_1 = require("@prisma/client");
-const prisma = new client_1.PrismaClient();
+const prisma_1 = require("../lib/prisma");
 const authenticate = async (req, res, next) => {
     try {
         const authHeader = req.headers.authorization;
@@ -13,7 +12,7 @@ const authenticate = async (req, res, next) => {
         }
         const token = authHeader.split(' ')[1];
         const decoded = (0, jwt_1.verifyToken)(token);
-        const user = await prisma.user.findUnique({
+        const user = await prisma_1.prisma.user.findUnique({
             where: { id: decoded.userId },
             select: {
                 id: true,

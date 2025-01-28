@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.onboardingController = void 0;
 const client_1 = require("@prisma/client");
 const apiError_1 = require("../utils/apiError");
-const prisma = new client_1.PrismaClient();
+const prisma_1 = require("../lib/prisma");
 exports.onboardingController = {
     updateProfile: async (req, res) => {
         var _a;
@@ -30,7 +30,7 @@ exports.onboardingController = {
                     },
                 };
             }
-            const user = await prisma.user.update({
+            const user = await prisma_1.prisma.user.update({
                 where: { id: userId },
                 data: updateData,
                 include: {
@@ -70,7 +70,7 @@ exports.onboardingController = {
             const today = new Date();
             const birthYear = today.getFullYear() - age;
             const dateOfBirth = new Date(birthYear, today.getMonth(), today.getDate());
-            const user = await prisma.user.update({
+            const user = await prisma_1.prisma.user.update({
                 where: { id: userId },
                 data: {
                     kyc: {
@@ -114,7 +114,7 @@ exports.onboardingController = {
         try {
             const userId = req.user.id;
             const financialData = req.body;
-            const user = await prisma.user.update({
+            const user = await prisma_1.prisma.user.update({
                 where: { id: userId },
                 data: {
                     financialProfile: {
@@ -166,7 +166,7 @@ exports.onboardingController = {
         try {
             const userId = req.user.id;
             const { primaryGoal } = req.body;
-            const user = await prisma.user.update({
+            const user = await prisma_1.prisma.user.update({
                 where: { id: userId },
                 data: {
                     financialProfile: {
@@ -229,7 +229,7 @@ exports.onboardingController = {
                 });
                 throw new apiError_1.ApiError(400, `Invalid income range. Must be one of: ${Object.values(client_1.IncomeRange).join(', ')}`);
             }
-            const user = await prisma.user.update({
+            const user = await prisma_1.prisma.user.update({
                 where: { id: userId },
                 data: {
                     financialProfile: {
@@ -288,7 +288,7 @@ exports.onboardingController = {
         try {
             const userId = req.user.id;
             const { spendingHabit, targetSpendingPercentage } = req.body;
-            const user = await prisma.user.update({
+            const user = await prisma_1.prisma.user.update({
                 where: { id: userId },
                 data: {
                     financialProfile: {
@@ -323,7 +323,7 @@ exports.onboardingController = {
                 ((_e = user.financialProfile) === null || _e === void 0 ? void 0 : _e.spendingHabit) &&
                 ((_f = user.kyc) === null || _f === void 0 ? void 0 : _f.status) === 'VERIFIED');
             if (isOnboardingComplete) {
-                await prisma.user.update({
+                await prisma_1.prisma.user.update({
                     where: { id: userId },
                     data: {
                         isVerified: true,
@@ -360,7 +360,7 @@ exports.onboardingController = {
         var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m;
         try {
             const userId = req.user.id;
-            const user = await prisma.user.findUnique({
+            const user = await prisma_1.prisma.user.findUnique({
                 where: { id: userId },
                 include: {
                     kyc: true,

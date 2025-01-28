@@ -1,10 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.verifyOTP = exports.generateOTP = void 0;
-const client_1 = require("@prisma/client");
 const jwt_1 = require("../utils/jwt");
 const twilioService_1 = require("../services/twilioService");
-const prisma = new client_1.PrismaClient();
+const prisma_1 = require("../lib/prisma");
 const generateOTP = async (req, res) => {
     try {
         const { phoneNumber } = req.body;
@@ -16,7 +15,7 @@ const generateOTP = async (req, res) => {
             });
             return;
         }
-        const recentOTP = await prisma.oTP.findFirst({
+        const recentOTP = await prisma_1.prisma.oTP.findFirst({
             where: {
                 phoneNumber,
                 createdAt: {
@@ -36,7 +35,7 @@ const generateOTP = async (req, res) => {
             return;
         }
         twilioService_1.twilioService.sendVerificationToken(phoneNumber);
-        await prisma.oTP.create({
+        await prisma_1.prisma.oTP.create({
             data: {
                 phoneNumber,
                 code: 'twilio-verification',
@@ -80,7 +79,7 @@ const verifyOTP = async (req, res) => {
             });
             return;
         }
-        const user = await prisma.user.upsert({
+        const user = await prisma_1.prisma.user.upsert({
             where: { phoneNumber },
             update: { isVerified: true },
             create: {
@@ -95,7 +94,7 @@ const verifyOTP = async (req, res) => {
             userId: user.id,
             role: user.role
         });
-        await prisma.oTP.updateMany({
+        await prisma_1.prisma.oTP.updateMany({
             where: { phoneNumber },
             data: { isUsed: true }
         });
