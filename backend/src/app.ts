@@ -40,12 +40,14 @@ const app = express();
 // Trust proxy configuration for Vercel
 app.enable('trust proxy');
 
-// Create logs directory if it doesn't exist
-import fs from 'fs';
-import path from 'path';
-const logsDir = path.join(__dirname, '..', 'logs');
-if (!fs.existsSync(logsDir)) {
-  fs.mkdirSync(logsDir);
+// Create logs directory if in development
+if (process.env.NODE_ENV === 'development') {
+  const fs = require('fs');
+  const path = require('path');
+  const logsDir = path.join(__dirname, '..', 'logs');
+  if (!fs.existsSync(logsDir)) {
+    fs.mkdirSync(logsDir);
+  }
 }
 
 // Optimized rate limiting configuration

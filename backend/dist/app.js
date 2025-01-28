@@ -36,11 +36,13 @@ if (process.env.NODE_ENV !== 'production') {
 }
 const app = (0, express_1.default)();
 app.enable('trust proxy');
-const fs_1 = __importDefault(require("fs"));
-const path_1 = __importDefault(require("path"));
-const logsDir = path_1.default.join(__dirname, '..', 'logs');
-if (!fs_1.default.existsSync(logsDir)) {
-    fs_1.default.mkdirSync(logsDir);
+if (process.env.NODE_ENV === 'development') {
+    const fs = require('fs');
+    const path = require('path');
+    const logsDir = path.join(__dirname, '..', 'logs');
+    if (!fs.existsSync(logsDir)) {
+        fs.mkdirSync(logsDir);
+    }
 }
 const apiLimiter = (0, express_rate_limit_1.rateLimit)({
     windowMs: 15 * 60 * 1000,

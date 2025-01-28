@@ -1,5 +1,4 @@
 import winston from 'winston';
-import path from 'path';
 
 const logLevels = {
   error: 0,
@@ -19,45 +18,48 @@ const colors = {
 
 winston.addColors(colors);
 
-const format = winston.format.combine(
+const consoleFormat = winston.format.combine(
   winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss:ms' }),
   winston.format.colorize({ all: true }),
-  winston.format.printf(
-    (info) => `${info.timestamp} ${info.level}: ${info.message}`,
-  ),
+  winston.format.printf(({ timestamp, level, message, ...meta }) => {
+    const metaString = Object.keys(meta).length ? JSON.stringify(meta, null, 2) : '';
+    return `${timestamp} ${level}: ${message} ${metaString}`;
+  })
 );
 
-const transports = [
-  // Console transport for development
-  new winston.transports.Console({
-    format: winston.format.combine(
-      winston.format.colorize(),
-      winston.format.simple()
-    )
-  }),
-  // File transport for production
-  new winston.transports.File({
-    filename: path.join('logs', 'error.log'),
-    level: 'error',
-    format: winston.format.combine(
-      winston.format.uncolorize(),
-      winston.format.json()
-    )
-  }),
-  new winston.transports.File({
-    filename: path.join('logs', 'combined.log'),
-    format: winston.format.combine(
-      winston.format.uncolorize(),
-      winston.format.json()
-    )
-  })
-];
+const fileFormat = winston.format.combine(
+  winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss:ms' }),
+  winston.format.uncolorize(),
+  winston.format.json()
+);
 
+// Initialize with console transport
 const logger = winston.createLogger({
   level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
   levels: logLevels,
-  format,
-  transports,
+  transports: [
+    new winston.transports.Console({
+      format: consoleFormat
+    })
+  ]
 });
+
+// Add file transports in development
+if (process.env.NODE_ENV === 'development') {
+  logger.add(
+    new winston.transports.File({
+      filename: 'logs/error.log',
+      level: 'error',
+      format: fileFormat
+    })
+  );
+  
+  logger.add(
+    new winston.transports.File({
+      filename: 'logs/combined.log',
+      format: fileFormat
+    })
+  );
+}
 
 export default logger;
