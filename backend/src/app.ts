@@ -10,7 +10,6 @@ import walletRoutes from './routes/walletRoutes';
 import kycRoutes from './routes/kycRoutes';
 import onboardingRoutes from './routes/onboardingRoutes';
 import { rateLimit } from 'express-rate-limit';
-import path from 'path';
 
 // Initialize Prisma Client with connection pooling and optimization
 const globalForPrisma = global as { prisma?: PrismaClient };
