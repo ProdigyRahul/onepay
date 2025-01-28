@@ -10,6 +10,17 @@ const startServer = async () => {
     await prisma.$connect();
     console.log('✅ Connected to database successfully');
 
+    // Record server start time
+    await prisma.serverMetrics.create({
+      data: {
+        cpuUsage: process.cpuUsage().user / 1000000,
+        memoryUsage: process.memoryUsage().heapUsed / 1024 / 1024,
+        diskUsage: 0,
+        activeUsers: 0,
+        totalRequests: 0
+      }
+    });
+
     // Start server
     app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);

@@ -234,6 +234,31 @@ model Notification {
   @@map("notifications")
 }
 
+model ServerMetrics {
+  id              String   @id @default(uuid())
+  startTime       DateTime @default(now())
+  lastUpdateTime  DateTime @updatedAt
+  totalRequests   Int      @default(0)
+  activeUsers     Int      @default(0)
+  cpuUsage        Float    @default(0)
+  memoryUsage     Float    @default(0)
+  diskUsage       Float    @default(0)
+
+  @@map("server_metrics")
+}
+
+model HistoricalMetric {
+  id              String   @id @default(uuid())
+  timestamp       DateTime @default(now())
+  apiResponseTime Float
+  dbQueryTime     Float
+  cpuUsage        Float
+  memoryUsage     Float
+  requestCount    Int
+
+  @@map("historical_metrics")
+}
+
 enum Role {
   ADMIN
   USER
