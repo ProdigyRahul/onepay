@@ -13,8 +13,11 @@ const startServer = async () => {
     // Record server start time
     await prisma.serverMetrics.create({
       data: {
-        startTime: new Date(),
-        lastRestartTime: new Date()
+        cpuUsage: process.cpuUsage().user / 1000000,
+        memoryUsage: process.memoryUsage().heapUsed / 1024 / 1024,
+        diskUsage: 0,
+        activeUsers: 0,
+        totalRequests: 0
       }
     });
 

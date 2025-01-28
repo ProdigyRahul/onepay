@@ -200,31 +200,28 @@ model Notification {
 }
 
 model ServerMetrics {
-  id                String   @id @default(uuid())
-  startTime         DateTime @default(now())
-  lastRestartTime   DateTime @default(now())
-  apiResponseTime   Float    @default(0)
-  dbQueryTime       Float    @default(0)
-  endpoint          String   @default("/health")
-  timestamp         DateTime @default(now())
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-  historicalMetrics HistoricalMetric[]
+  id              String   @id @default(uuid())
+  startTime       DateTime @default(now())
+  lastUpdateTime  DateTime @updatedAt
+  totalRequests   Int      @default(0)
+  activeUsers     Int      @default(0)
+  cpuUsage        Float    @default(0)
+  memoryUsage     Float    @default(0)
+  diskUsage       Float    @default(0)
 
   @@map("server_metrics")
-  @@index([timestamp])
 }
 
 model HistoricalMetric {
-  id              String        @id @default(uuid())
-  serverMetricsId String
+  id              String   @id @default(uuid())
+  timestamp       DateTime @default(now())
   apiResponseTime Float
   dbQueryTime     Float
-  timestamp       DateTime      @default(now())
-  serverMetrics   ServerMetrics @relation(fields: [serverMetricsId], references: [id])
+  cpuUsage        Float
+  memoryUsage     Float
+  requestCount    Int
 
   @@map("historical_metrics")
-  @@index([timestamp])
 }
 
 enum Role {

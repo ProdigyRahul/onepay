@@ -110,31 +110,22 @@ app.get('/health', async (_req: Request, res: Response) => {
 
     // Get or create server metrics
     let serverMetrics = await prisma.serverMetrics.findFirst({
-      orderBy: { startTime: 'desc' },
-      include: {
-        historicalMetrics: {
-          orderBy: {
-            timestamp: 'desc'
-          },
-          take: MAX_HISTORY
-        }
-      }
+      orderBy: { startTime: 'desc' }
     });
 
     console.log('[Health Check] Retrieved server metrics:', {
-      exists: !!serverMetrics,
-      historicalCount: serverMetrics?.historicalMetrics?.length || 0
+      exists: !!serverMetrics
     });
 
     if (!serverMetrics) {
       console.log('[Health Check] Creating new server metrics');
       serverMetrics = await prisma.serverMetrics.create({
         data: {
-          startTime: new Date(),
-          lastRestartTime: new Date()
-        },
-        include: {
-          historicalMetrics: true
+          cpuUsage: process.cpuUsage().user / 1000000,
+          memoryUsage: process.memoryUsage().heapUsed / 1024 / 1024,
+          diskUsage: 0, // You might want to implement actual disk usage check
+          activeUsers: 0,
+          totalRequests: 0
         }
       });
     }
@@ -143,36 +134,19 @@ app.get('/health', async (_req: Request, res: Response) => {
     console.log('[Health Check] Adding new historical metric');
     await prisma.historicalMetric.create({
       data: {
-        serverMetricsId: serverMetrics.id,
         apiResponseTime: Date.now() - startTime,
         dbQueryTime: dbTime,
+        cpuUsage: process.cpuUsage().user / 1000000,
+        memoryUsage: process.memoryUsage().heapUsed / 1024 / 1024,
+        requestCount: 1
       }
     });
 
-    // Clean up old metrics (keep only last MAX_HISTORY)
-    if (serverMetrics.historicalMetrics.length >= MAX_HISTORY) {
-      console.log('[Health Check] Cleaning up old metrics');
-      const oldestToKeep = serverMetrics.historicalMetrics[MAX_HISTORY - 1];
-      if (oldestToKeep) {
-        await prisma.historicalMetric.deleteMany({
-          where: {
-            serverMetricsId: serverMetrics.id,
-            timestamp: {
-              lt: oldestToKeep.timestamp
-            }
-          }
-        });
-      }
-    }
-
-    // Get updated metrics
-    console.log('[Health Check] Fetching updated metrics');
+    // Get historical metrics for statistics
+    console.log('[Health Check] Fetching metrics');
     const historicalMetrics = await prisma.historicalMetric.findMany({
-      where: {
-        serverMetricsId: serverMetrics.id
-      },
       orderBy: {
-        timestamp: 'asc'
+        timestamp: 'desc'
       },
       take: MAX_HISTORY
     });
@@ -180,14 +154,14 @@ app.get('/health', async (_req: Request, res: Response) => {
     console.log('[Health Check] Retrieved historical metrics:', {
       count: historicalMetrics.length,
       timeRange: historicalMetrics.length > 0 ? {
-        first: historicalMetrics[0].timestamp,
-        last: historicalMetrics[historicalMetrics.length - 1].timestamp
+        first: historicalMetrics[historicalMetrics.length - 1].timestamp,
+        last: historicalMetrics[0].timestamp
       } : null
     });
 
     const uptime = Math.floor((Date.now() - serverMetrics.startTime.getTime()) / 1000);
-    const averageApiTime = historicalMetrics.reduce((acc, m) => acc + m.apiResponseTime, 0) / historicalMetrics.length;
-    const averageDbTime = historicalMetrics.reduce((acc, m) => acc + m.dbQueryTime, 0) / historicalMetrics.length;
+    const averageApiTime = historicalMetrics.reduce((acc: number, m) => acc + m.apiResponseTime, 0) / historicalMetrics.length;
+    const averageDbTime = historicalMetrics.reduce((acc: number, m) => acc + m.dbQueryTime, 0) / historicalMetrics.length;
 
     const status = {
       timestamp: new Date().toISOString(),

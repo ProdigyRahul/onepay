@@ -13,8 +13,11 @@ const startServer = async () => {
         console.log('✅ Connected to database successfully');
         await app_2.prisma.serverMetrics.create({
             data: {
-                startTime: new Date(),
-                lastRestartTime: new Date()
+                cpuUsage: process.cpuUsage().user / 1000000,
+                memoryUsage: process.memoryUsage().heapUsed / 1024 / 1024,
+                diskUsage: 0,
+                activeUsers: 0,
+                totalRequests: 0
             }
         });
         app_1.default.listen(PORT, () => {
