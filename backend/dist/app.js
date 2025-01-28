@@ -18,6 +18,7 @@ const onboardingRoutes_1 = __importDefault(require("./routes/onboardingRoutes"))
 const express_rate_limit_1 = require("express-rate-limit");
 exports.prisma = new client_1.PrismaClient();
 const app = (0, express_1.default)();
+app.enable('trust proxy');
 app.use((0, cors_1.default)());
 app.use((0, helmet_1.default)());
 app.use((0, morgan_1.default)('dev'));

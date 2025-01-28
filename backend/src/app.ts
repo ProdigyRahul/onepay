@@ -17,6 +17,9 @@ export const prisma = new PrismaClient();
 // Create Express app
 const app = express();
 
+// Trust proxy configuration for Vercel
+app.enable('trust proxy');
+
 // Middleware
 app.use(cors());
 app.use(helmet());
