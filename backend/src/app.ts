@@ -205,38 +205,110 @@ app.get('/health', async (_req: Request, res: Response) => {
         averageApiTime: `${Math.round(averageApiTime)}ms`
       },
       uptime,
-      startedAt: serverMetrics.startTime.toISOString(),
       environment: process.env.NODE_ENV
     };
 
-    console.log('[Health Check] Rendering template with data:', {
-      metricsCount: historicalMetrics.length,
-      statusSnapshot: status
-    });
-
-    res.render('health', { status, metrics: historicalMetrics });
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>OnePay Health Status</title>
+          <style>
+            body {
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+              background: #2563EB;
+              color: white;
+              min-height: 100vh;
+              margin: 0;
+              padding: 20px;
+            }
+            .container {
+              max-width: 800px;
+              margin: 0 auto;
+            }
+            h1 {
+              font-size: 2rem;
+              margin-bottom: 2rem;
+            }
+            .status-card {
+              background: rgba(255,255,255,0.1);
+              border-radius: 10px;
+              padding: 20px;
+              margin-bottom: 20px;
+            }
+            .service {
+              display: flex;
+              justify-content: space-between;
+              padding: 10px 0;
+              border-bottom: 1px solid rgba(255,255,255,0.1);
+            }
+            .service:last-child {
+              border-bottom: none;
+            }
+            .status-badge {
+              background: #10B981;
+              padding: 4px 12px;
+              border-radius: 20px;
+              font-size: 0.9rem;
+            }
+            .error {
+              background: #EF4444;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <h1>🏥 System Health Status</h1>
+            <div class="status-card">
+              <div class="service">
+                <strong>Status</strong>
+                <span class="status-badge">${status.status}</span>
+              </div>
+              <div class="service">
+                <strong>Database</strong>
+                <span class="status-badge">${status.services.database}</span>
+              </div>
+              <div class="service">
+                <strong>API Server</strong>
+                <span class="status-badge">${status.services.api}</span>
+              </div>
+              <div class="service">
+                <strong>Environment</strong>
+                <span>${status.environment}</span>
+              </div>
+              <div class="service">
+                <strong>Uptime</strong>
+                <span>${Math.floor(status.uptime)} seconds</span>
+              </div>
+              <div class="service">
+                <strong>Last Checked</strong>
+                <span>${new Date(status.timestamp).toLocaleString()}</span>
+              </div>
+              <div class="service">
+                <strong>Current DB Response</strong>
+                <span>${status.performance.currentDbResponse}</span>
+              </div>
+              <div class="service">
+                <strong>Average DB Response</strong>
+                <span>${status.performance.averageDbTime}</span>
+              </div>
+              <div class="service">
+                <strong>Current API Response</strong>
+                <span>${status.performance.currentApiResponse}</span>
+              </div>
+              <div class="service">
+                <strong>Average API Response</strong>
+                <span>${status.performance.averageApiTime}</span>
+              </div>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+    res.send(html);
   } catch (error) {
     console.error('[Health Check] Error:', error);
-    res.status(500).render('health', {
-      status: {
-        timestamp: new Date().toISOString(),
-        status: 'error',
-        services: {
-          database: 'error',
-          api: 'error'
-        },
-        performance: {
-          currentDbResponse: 'N/A',
-          currentApiResponse: 'N/A',
-          averageDbTime: 'N/A',
-          averageApiTime: 'N/A'
-        },
-        uptime: 0,
-        startedAt: new Date().toISOString(),
-        environment: process.env.NODE_ENV
-      },
-      metrics: []
-    });
+    res.status(500).send('Internal Server Error');
   }
 });
 
