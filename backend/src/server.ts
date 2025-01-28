@@ -1,14 +1,15 @@
-import 'dotenv/config';
 import app from './app';
-import { prisma } from './app';
+import { PrismaClient } from '@prisma/client';
+import logger from './utils/logger';
 
+const prisma = new PrismaClient();
 const PORT = process.env.PORT || 3000;
 
 const startServer = async () => {
   try {
     // Test database connection
     await prisma.$connect();
-    console.log('✅ Connected to database successfully');
+    logger.info('✅ Connected to database successfully');
 
     // Record server start time
     await prisma.serverMetrics.create({
@@ -23,10 +24,10 @@ const startServer = async () => {
 
     // Start server
     app.listen(PORT, () => {
-      console.log(`🚀 Server running on port ${PORT}`);
+      logger.info(`🚀 Server running on port ${PORT}`);
     });
   } catch (error) {
-    console.error('❌ Error starting server:', error);
+    logger.error('❌ Error starting server:', error);
     process.exit(1);
   }
 };

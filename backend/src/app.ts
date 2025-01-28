@@ -10,6 +10,7 @@ import walletRoutes from './routes/walletRoutes';
 import kycRoutes from './routes/kycRoutes';
 import onboardingRoutes from './routes/onboardingRoutes';
 import { rateLimit } from 'express-rate-limit';
+import logger from './utils/logger';
 
 // Initialize Prisma Client with connection pooling and optimization
 const globalForPrisma = global as { prisma?: PrismaClient };
@@ -39,6 +40,14 @@ const app = express();
 // Trust proxy configuration for Vercel
 app.enable('trust proxy');
 
+// Create logs directory if it doesn't exist
+import fs from 'fs';
+import path from 'path';
+const logsDir = path.join(__dirname, '..', 'logs');
+if (!fs.existsSync(logsDir)) {
+  fs.mkdirSync(logsDir);
+}
+
 // Optimized rate limiting configuration
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -56,11 +65,20 @@ const apiLimiter = rateLimit({
 app.use(compression()); // Add compression early in middleware chain
 app.use(cors());
 app.use(helmet());
-app.use(process.env.NODE_ENV === 'development' 
-  ? morgan('dev') 
-  : morgan('combined', {
-      skip: (_req, _res) => _res.statusCode < 400 // Only log errors in production
-    }));
+
+// Custom morgan format that uses our logger
+morgan.token('request-id', (_req, _res) => Math.random().toString(36).substring(7));
+app.use(morgan(
+  ':request-id [:date[clf]] ":method :url HTTP/:http-version" :status :res[content-length] ":referrer" ":user-agent" - :response-time ms',
+  {
+    stream: {
+      write: (message: string) => {
+        logger.http(message.trim());
+      },
+    },
+  }
+));
+
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
@@ -129,24 +147,24 @@ app.get('/health', async (_req: Request, res: Response) => {
     const startTime = Date.now();
     const MAX_HISTORY = 20; // Keep last 20 metrics
     
-    console.log('[Health Check] Starting health check');
+    logger.info('[Health Check] Starting health check');
     
     // Check database connection and measure query time
     await prisma.$queryRaw`SELECT 1`;
     const dbTime = Date.now() - startTime;
-    console.log('[Health Check] Database response time:', dbTime, 'ms');
+    logger.info(`[Health Check] Database response time: ${dbTime}ms`);
 
     // Get or create server metrics
     let serverMetrics = await prisma.serverMetrics.findFirst({
       orderBy: { startTime: 'desc' }
     });
 
-    console.log('[Health Check] Retrieved server metrics:', {
+    logger.info('[Health Check] Retrieved server metrics:', {
       exists: !!serverMetrics
     });
 
     if (!serverMetrics) {
-      console.log('[Health Check] Creating new server metrics');
+      logger.info('[Health Check] Creating new server metrics');
       serverMetrics = await prisma.serverMetrics.create({
         data: {
           cpuUsage: process.cpuUsage().user / 1000000,
@@ -159,7 +177,7 @@ app.get('/health', async (_req: Request, res: Response) => {
     }
 
     // Add new historical metric
-    console.log('[Health Check] Adding new historical metric');
+    logger.info('[Health Check] Adding new historical metric');
     await prisma.historicalMetric.create({
       data: {
         apiResponseTime: Date.now() - startTime,
@@ -171,7 +189,7 @@ app.get('/health', async (_req: Request, res: Response) => {
     });
 
     // Get historical metrics for statistics
-    console.log('[Health Check] Fetching metrics');
+    logger.info('[Health Check] Fetching metrics');
     const historicalMetrics = await prisma.historicalMetric.findMany({
       orderBy: {
         timestamp: 'desc'
@@ -179,7 +197,7 @@ app.get('/health', async (_req: Request, res: Response) => {
       take: MAX_HISTORY
     });
 
-    console.log('[Health Check] Retrieved historical metrics:', {
+    logger.info('[Health Check] Retrieved historical metrics:', {
       count: historicalMetrics.length,
       timeRange: historicalMetrics.length > 0 ? {
         first: historicalMetrics[historicalMetrics.length - 1].timestamp,
@@ -307,21 +325,79 @@ app.get('/health', async (_req: Request, res: Response) => {
     `;
     res.send(html);
   } catch (error) {
-    console.error('[Health Check] Error:', error);
-    res.status(500).send('Internal Server Error');
+    logger.error('[Health Check] Error:', error);
+    const errorHtml = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>OnePay Health Status - Error</title>
+          <style>
+            body {
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+              background: #EF4444;
+              color: white;
+              min-height: 100vh;
+              margin: 0;
+              padding: 20px;
+            }
+            .container {
+              max-width: 800px;
+              margin: 0 auto;
+            }
+            h1 {
+              font-size: 2rem;
+              margin-bottom: 2rem;
+            }
+            .error-card {
+              background: rgba(0,0,0,0.1);
+              border-radius: 10px;
+              padding: 20px;
+              margin-bottom: 20px;
+            }
+            .timestamp {
+              opacity: 0.8;
+              margin-top: 20px;
+              font-size: 0.9rem;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <h1>⚠️ System Health Alert</h1>
+            <div class="error-card">
+              <h2>Service Disruption Detected</h2>
+              <p>${error instanceof Error ? error.message : 'Unknown error occurred'}</p>
+              <div class="timestamp">
+                Detected at: ${new Date().toLocaleString()}
+              </div>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+    res.status(500).send(errorHtml);
   }
 });
 
 // Error handling middleware
-app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
-  console.error(err.stack);
+app.use((err: Error, _req: Request, res: Response, _next: Function) => {
+  logger.error('Unhandled Error:', err);
   res.status(500).json({
-    success: false,
+    status: 'error',
     error: 'Internal server error',
   });
 });
 
-// Cleanup function for Prisma on server shutdown
+process.on('uncaughtException', (error: Error) => {
+  logger.error('Uncaught Exception:', error);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason: any) => {
+  logger.error('Unhandled Rejection:', reason);
+  process.exit(1);
+});
+
 process.on('beforeExit', async () => {
   await prisma.$disconnect();
 });
