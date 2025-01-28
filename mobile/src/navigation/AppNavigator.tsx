@@ -89,7 +89,7 @@ const AppNavigator = () => {
         // Delay removing splash screen slightly to ensure smooth transition
         setTimeout(() => {
           setIsLoading(false);
-        }, 3000);
+        }, 1000);
       }
     };
 

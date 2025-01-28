@@ -83,7 +83,32 @@ app.get('/', (_req, res) => {
 });
 app.get('/health', async (_req, res) => {
     try {
+        const startTime = Date.now();
         await exports.prisma.$queryRaw `SELECT 1`;
+        const dbTime = Date.now() - startTime;
+        const serverMetrics = await exports.prisma.serverMetrics.findFirst({
+            orderBy: { startTime: 'desc' }
+        });
+        await exports.prisma.serverMetrics.create({
+            data: {
+                responseTime: Date.now() - startTime,
+                dbQueryTime: dbTime,
+                timestamp: new Date()
+            }
+        });
+        const lastDayMetrics = await exports.prisma.serverMetrics.findMany({
+            where: {
+                timestamp: {
+                    gte: new Date(Date.now() - 24 * 60 * 60 * 1000)
+                }
+            },
+            orderBy: {
+                timestamp: 'asc'
+            }
+        });
+        const uptime = serverMetrics
+            ? Math.floor((Date.now() - serverMetrics.startTime.getTime()) / 1000)
+            : 0;
         const status = {
             timestamp: new Date().toISOString(),
             status: 'healthy',
@@ -91,7 +116,12 @@ app.get('/health', async (_req, res) => {
                 database: 'connected',
                 api: 'running'
             },
-            uptime: process.uptime(),
+            performance: {
+                currentDbResponse: `${dbTime}ms`,
+                currentApiResponse: `${Date.now() - startTime}ms`
+            },
+            uptime,
+            startedAt: serverMetrics === null || serverMetrics === void 0 ? void 0 : serverMetrics.startTime.toISOString(),
             environment: process.env.NODE_ENV
         };
         const html = `
@@ -99,6 +129,7 @@ app.get('/health', async (_req, res) => {
       <html>
         <head>
           <title>OnePay Health Status</title>
+          <script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
           <style>
             body {
               font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
@@ -140,6 +171,12 @@ app.get('/health', async (_req, res) => {
             .error {
               background: #EF4444;
             }
+            .graph-container {
+              background: white;
+              border-radius: 10px;
+              padding: 20px;
+              margin-top: 20px;
+            }
           </style>
         </head>
         <body>
@@ -159,19 +196,79 @@ app.get('/health', async (_req, res) => {
                 <span class="status-badge">${status.services.api}</span>
               </div>
               <div class="service">
+                <strong>Current DB Response</strong>
+                <span>${status.performance.currentDbResponse}</span>
+              </div>
+              <div class="service">
+                <strong>Current API Response</strong>
+                <span>${status.performance.currentApiResponse}</span>
+              </div>
+              <div class="service">
                 <strong>Environment</strong>
                 <span>${status.environment}</span>
               </div>
               <div class="service">
+                <strong>Server Started At</strong>
+                <span>${status.startedAt ? new Date(status.startedAt).toLocaleString() : 'Unknown'}</span>
+              </div>
+              <div class="service">
                 <strong>Uptime</strong>
-                <span>${Math.floor(status.uptime)} seconds</span>
+                <span>${Math.floor(uptime / 86400)}d ${Math.floor((uptime % 86400) / 3600)}h ${Math.floor((uptime % 3600) / 60)}m ${uptime % 60}s</span>
               </div>
               <div class="service">
                 <strong>Last Checked</strong>
                 <span>${new Date(status.timestamp).toLocaleString()}</span>
               </div>
             </div>
+            
+            <div class="graph-container">
+              <div id="performanceChart"></div>
+            </div>
           </div>
+
+          <script>
+            const metrics = ${JSON.stringify(lastDayMetrics)};
+            
+            const apiTrace = {
+              x: metrics.map(m => new Date(m.timestamp)),
+              y: metrics.map(m => m.responseTime),
+              type: 'scatter',
+              mode: 'lines',
+              name: 'API Response Time (ms)',
+              line: { color: '#2563EB' }
+            };
+
+            const dbTrace = {
+              x: metrics.map(m => new Date(m.timestamp)),
+              y: metrics.map(m => m.dbQueryTime),
+              type: 'scatter',
+              mode: 'lines',
+              name: 'DB Query Time (ms)',
+              line: { color: '#10B981' }
+            };
+
+            const layout = {
+              title: 'Response Times (Last 24 Hours)',
+              xaxis: { 
+                title: 'Time',
+                gridcolor: '#E5E7EB'
+              },
+              yaxis: { 
+                title: 'Response Time (ms)',
+                gridcolor: '#E5E7EB'
+              },
+              paper_bgcolor: 'white',
+              plot_bgcolor: 'white',
+              font: { color: '#1F2937' }
+            };
+
+            Plotly.newPlot('performanceChart', [apiTrace, dbTrace], layout);
+
+            // Auto-refresh every 30 seconds
+            setInterval(() => {
+              window.location.reload();
+            }, 30000);
+          </script>
         </body>
       </html>
     `;
@@ -218,7 +315,7 @@ app.get('/health', async (_req, res) => {
             <h1>⚠️ System Health Alert</h1>
             <div class="error-card">
               <h2>Service Disruption Detected</h2>
-              <p>${error.message}</p>
+              <p>${error instanceof Error ? error.message : 'Unknown error'}</p>
               <div class="timestamp">
                 Detected at: ${new Date().toLocaleString()}
               </div>

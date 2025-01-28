@@ -10,6 +10,7 @@ import kycRoutes from './routes/kycRoutes';
 import { apiLimiter } from './middleware/rateLimiter';
 import onboardingRoutes from './routes/onboardingRoutes';
 import { rateLimit } from 'express-rate-limit';
+import path from 'path';
 
 // Initialize Prisma Client
 export const prisma = new PrismaClient();
@@ -33,6 +34,10 @@ const limiter = rateLimit({
   max: 100 // limit each IP to 100 requests per windowMs
 });
 app.use(limiter);
+
+// Set up EJS template engine
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -93,9 +98,97 @@ app.get('/', (_req: Request, res: Response) => {
 // Health check route
 app.get('/health', async (_req: Request, res: Response) => {
   try {
-    // Check database connection
-    await prisma.$queryRaw`SELECT 1`;
+    const startTime = Date.now();
+    const MAX_HISTORY = 20; // Keep last 20 metrics
     
+    console.log('[Health Check] Starting health check');
+    
+    // Check database connection and measure query time
+    await prisma.$queryRaw`SELECT 1`;
+    const dbTime = Date.now() - startTime;
+    console.log('[Health Check] Database response time:', dbTime, 'ms');
+
+    // Get or create server metrics
+    let serverMetrics = await prisma.serverMetrics.findFirst({
+      orderBy: { startTime: 'desc' },
+      include: {
+        historicalMetrics: {
+          orderBy: {
+            timestamp: 'desc'
+          },
+          take: MAX_HISTORY
+        }
+      }
+    });
+
+    console.log('[Health Check] Retrieved server metrics:', {
+      exists: !!serverMetrics,
+      historicalCount: serverMetrics?.historicalMetrics?.length || 0
+    });
+
+    if (!serverMetrics) {
+      console.log('[Health Check] Creating new server metrics');
+      serverMetrics = await prisma.serverMetrics.create({
+        data: {
+          startTime: new Date(),
+          lastRestartTime: new Date()
+        },
+        include: {
+          historicalMetrics: true
+        }
+      });
+    }
+
+    // Add new historical metric
+    console.log('[Health Check] Adding new historical metric');
+    await prisma.historicalMetric.create({
+      data: {
+        serverMetricsId: serverMetrics.id,
+        apiResponseTime: Date.now() - startTime,
+        dbQueryTime: dbTime,
+      }
+    });
+
+    // Clean up old metrics (keep only last MAX_HISTORY)
+    if (serverMetrics.historicalMetrics.length >= MAX_HISTORY) {
+      console.log('[Health Check] Cleaning up old metrics');
+      const oldestToKeep = serverMetrics.historicalMetrics[MAX_HISTORY - 1];
+      if (oldestToKeep) {
+        await prisma.historicalMetric.deleteMany({
+          where: {
+            serverMetricsId: serverMetrics.id,
+            timestamp: {
+              lt: oldestToKeep.timestamp
+            }
+          }
+        });
+      }
+    }
+
+    // Get updated metrics
+    console.log('[Health Check] Fetching updated metrics');
+    const historicalMetrics = await prisma.historicalMetric.findMany({
+      where: {
+        serverMetricsId: serverMetrics.id
+      },
+      orderBy: {
+        timestamp: 'asc'
+      },
+      take: MAX_HISTORY
+    });
+
+    console.log('[Health Check] Retrieved historical metrics:', {
+      count: historicalMetrics.length,
+      timeRange: historicalMetrics.length > 0 ? {
+        first: historicalMetrics[0].timestamp,
+        last: historicalMetrics[historicalMetrics.length - 1].timestamp
+      } : null
+    });
+
+    const uptime = Math.floor((Date.now() - serverMetrics.startTime.getTime()) / 1000);
+    const averageApiTime = historicalMetrics.reduce((acc, m) => acc + m.apiResponseTime, 0) / historicalMetrics.length;
+    const averageDbTime = historicalMetrics.reduce((acc, m) => acc + m.dbQueryTime, 0) / historicalMetrics.length;
+
     const status = {
       timestamp: new Date().toISOString(),
       status: 'healthy',
@@ -103,144 +196,45 @@ app.get('/health', async (_req: Request, res: Response) => {
         database: 'connected',
         api: 'running'
       },
-      uptime: process.uptime(),
+      performance: {
+        currentDbResponse: `${dbTime}ms`,
+        currentApiResponse: `${Date.now() - startTime}ms`,
+        averageDbTime: `${Math.round(averageDbTime)}ms`,
+        averageApiTime: `${Math.round(averageApiTime)}ms`
+      },
+      uptime,
+      startedAt: serverMetrics.startTime.toISOString(),
       environment: process.env.NODE_ENV
     };
 
-    // Send HTML response
-    const html = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>OnePay Health Status</title>
-          <style>
-            body {
-              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-              background: #2563EB;
-              color: white;
-              min-height: 100vh;
-              margin: 0;
-              padding: 20px;
-            }
-            .container {
-              max-width: 800px;
-              margin: 0 auto;
-            }
-            h1 {
-              font-size: 2rem;
-              margin-bottom: 2rem;
-            }
-            .status-card {
-              background: rgba(255,255,255,0.1);
-              border-radius: 10px;
-              padding: 20px;
-              margin-bottom: 20px;
-            }
-            .service {
-              display: flex;
-              justify-content: space-between;
-              padding: 10px 0;
-              border-bottom: 1px solid rgba(255,255,255,0.1);
-            }
-            .service:last-child {
-              border-bottom: none;
-            }
-            .status-badge {
-              background: #10B981;
-              padding: 4px 12px;
-              border-radius: 20px;
-              font-size: 0.9rem;
-            }
-            .error {
-              background: #EF4444;
-            }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <h1>🏥 System Health Status</h1>
-            <div class="status-card">
-              <div class="service">
-                <strong>Status</strong>
-                <span class="status-badge">${status.status}</span>
-              </div>
-              <div class="service">
-                <strong>Database</strong>
-                <span class="status-badge">${status.services.database}</span>
-              </div>
-              <div class="service">
-                <strong>API Server</strong>
-                <span class="status-badge">${status.services.api}</span>
-              </div>
-              <div class="service">
-                <strong>Environment</strong>
-                <span>${status.environment}</span>
-              </div>
-              <div class="service">
-                <strong>Uptime</strong>
-                <span>${Math.floor(status.uptime)} seconds</span>
-              </div>
-              <div class="service">
-                <strong>Last Checked</strong>
-                <span>${new Date(status.timestamp).toLocaleString()}</span>
-              </div>
-            </div>
-          </div>
-        </body>
-      </html>
-    `;
-    res.send(html);
+    console.log('[Health Check] Rendering template with data:', {
+      metricsCount: historicalMetrics.length,
+      statusSnapshot: status
+    });
+
+    res.render('health', { status, metrics: historicalMetrics });
   } catch (error) {
-    const errorHtml = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>OnePay Health Status - Error</title>
-          <style>
-            body {
-              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-              background: #EF4444;
-              color: white;
-              min-height: 100vh;
-              margin: 0;
-              padding: 20px;
-            }
-            .container {
-              max-width: 800px;
-              margin: 0 auto;
-            }
-            h1 {
-              font-size: 2rem;
-              margin-bottom: 2rem;
-            }
-            .error-card {
-              background: rgba(0,0,0,0.1);
-              border-radius: 10px;
-              padding: 20px;
-              margin-bottom: 20px;
-            }
-            .timestamp {
-              opacity: 0.8;
-              margin-top: 20px;
-              font-size: 0.9rem;
-            }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <h1>⚠️ System Health Alert</h1>
-            <div class="error-card">
-              <h2>Service Disruption Detected</h2>
-              <p>${error.message}</p>
-              <div class="timestamp">
-                Detected at: ${new Date().toLocaleString()}
-              </div>
-            </div>
-          </div>
-        </body>
-      </html>
-    `;
-    res.status(500).send(errorHtml);
+    console.error('[Health Check] Error:', error);
+    res.status(500).render('health', {
+      status: {
+        timestamp: new Date().toISOString(),
+        status: 'error',
+        services: {
+          database: 'error',
+          api: 'error'
+        },
+        performance: {
+          currentDbResponse: 'N/A',
+          currentApiResponse: 'N/A',
+          averageDbTime: 'N/A',
+          averageApiTime: 'N/A'
+        },
+        uptime: 0,
+        startedAt: new Date().toISOString(),
+        environment: process.env.NODE_ENV
+      },
+      metrics: []
+    });
   }
 });
 

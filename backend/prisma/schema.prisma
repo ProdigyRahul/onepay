@@ -199,6 +199,34 @@ model Notification {
   @@map("notifications")
 }
 
+model ServerMetrics {
+  id                String   @id @default(uuid())
+  startTime         DateTime @default(now())
+  lastRestartTime   DateTime @default(now())
+  apiResponseTime   Float    @default(0)
+  dbQueryTime       Float    @default(0)
+  endpoint          String   @default("/health")
+  timestamp         DateTime @default(now())
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  historicalMetrics HistoricalMetric[]
+
+  @@map("server_metrics")
+  @@index([timestamp])
+}
+
+model HistoricalMetric {
+  id              String        @id @default(uuid())
+  serverMetricsId String
+  apiResponseTime Float
+  dbQueryTime     Float
+  timestamp       DateTime      @default(now())
+  serverMetrics   ServerMetrics @relation(fields: [serverMetricsId], references: [id])
+
+  @@map("historical_metrics")
+  @@index([timestamp])
+}
+
 enum Role {
   ADMIN
   USER
