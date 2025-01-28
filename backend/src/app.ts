@@ -2,17 +2,36 @@ import express, { Request, Response } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import compression from 'compression';
 import { PrismaClient } from '@prisma/client';
 import userRoutes from './routes/userRoutes';
 import authRoutes from './routes/authRoutes';
 import walletRoutes from './routes/walletRoutes';
 import kycRoutes from './routes/kycRoutes';
-import { apiLimiter } from './middleware/rateLimiter';
 import onboardingRoutes from './routes/onboardingRoutes';
 import { rateLimit } from 'express-rate-limit';
 
-// Initialize Prisma Client
-export const prisma = new PrismaClient();
+// Initialize Prisma Client with connection pooling and optimization
+const globalForPrisma = global as { prisma?: PrismaClient };
+
+export const prisma = globalForPrisma.prisma || new PrismaClient({
+  log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+  datasources: {
+    db: {
+      url: process.env.DATABASE_URL
+    }
+  },
+  // @ts-ignore - Prisma doesn't expose these types but they work
+  __internal: {
+    engine: {
+      connectionLimit: 5 // Adjust based on your needs
+    }
+  }
+});
+
+if (process.env.NODE_ENV !== 'production') {
+  globalForPrisma.prisma = prisma;
+}
 
 // Create Express app
 const app = express();
@@ -20,22 +39,33 @@ const app = express();
 // Trust proxy configuration for Vercel
 app.enable('trust proxy');
 
+// Optimized rate limiting configuration
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs
+  standardHeaders: true,
+  legacyHeaders: false,
+  // Add Redis store here if needed for distributed rate limiting
+  skip: (req) => {
+    // Skip rate limiting for health checks
+    return req.path === '/health';
+  }
+});
+
 // Middleware
+app.use(compression()); // Add compression early in middleware chain
 app.use(cors());
 app.use(helmet());
-app.use(morgan('dev'));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(process.env.NODE_ENV === 'development' 
+  ? morgan('dev') 
+  : morgan('combined', {
+      skip: (_req, _res) => _res.statusCode < 400 // Only log errors in production
+    }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Apply rate limiting to all routes
+// Apply rate limiting to all routes except health check
 app.use(apiLimiter);
-
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100 // limit each IP to 100 requests per windowMs
-});
-app.use(limiter);
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -254,6 +284,11 @@ app.use((err: Error, _req: express.Request, res: express.Response, _next: expres
     success: false,
     error: 'Internal server error',
   });
+});
+
+// Cleanup function for Prisma on server shutdown
+process.on('beforeExit', async () => {
+  await prisma.$disconnect();
 });
 
 export default app;

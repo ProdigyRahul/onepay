@@ -28,6 +28,9 @@ model User {
   otps               OTP[]
   wallet             Wallet?
 
+  @@index([phoneNumber])
+  @@index([email])
+  @@index([createdAt])
   @@map("users")
 }
 
@@ -42,6 +45,9 @@ model OTP {
   updatedAt   DateTime @updatedAt
   user        User     @relation(fields: [userId], references: [id])
 
+  @@index([phoneNumber])
+  @@index([userId])
+  @@index([expiresAt])
   @@map("otps")
 }
 
@@ -58,6 +64,9 @@ model KYC {
   verifiedAt  DateTime?
   user        User      @relation(fields: [userId], references: [id])
 
+  @@index([userId])
+  @@index([panNumber])
+  @@index([status])
   @@map("kyc")
 }
 
@@ -73,6 +82,9 @@ model FinancialProfile {
   updatedAt                DateTime      @updatedAt
   user                     User          @relation(fields: [userId], references: [id])
 
+  @@index([userId])
+  @@index([incomeRange])
+  @@index([primaryGoal])
   @@map("financial_profiles")
 }
 
@@ -95,6 +107,9 @@ model Wallet {
   sentTransfers     Transfer[]    @relation("SenderWallet")
   user              User          @relation(fields: [userId], references: [id])
 
+  @@index([userId])
+  @@index([balance])
+  @@index([isBlocked])
   @@map("wallets")
 }
 
@@ -111,6 +126,9 @@ model Transaction {
   updatedAt   DateTime          @updatedAt
   wallet      Wallet            @relation(fields: [walletId], references: [id])
 
+  @@index([walletId])
+  @@index([type])
+  @@index([status])
   @@map("transactions")
 }
 
@@ -126,6 +144,9 @@ model Transfer {
   receiverWallet   Wallet         @relation("ReceiverWallet", fields: [receiverWalletId], references: [id])
   senderWallet     Wallet         @relation("SenderWallet", fields: [senderWalletId], references: [id])
 
+  @@index([senderWalletId])
+  @@index([receiverWalletId])
+  @@index([status])
   @@map("transfers")
 }
 
@@ -142,6 +163,9 @@ model Budget {
   updatedAt DateTime        @updatedAt
   user      User            @relation(fields: [userId], references: [id])
 
+  @@index([userId])
+  @@index([category])
+  @@index([period])
   @@map("budgets")
 }
 
@@ -156,6 +180,9 @@ model LearningProgress {
   module    LearningModule @relation(fields: [moduleId], references: [id])
   user      User           @relation(fields: [userId], references: [id])
 
+  @@index([userId])
+  @@index([moduleId])
+  @@index([progress])
   @@map("learning_progress")
 }
 
@@ -169,6 +196,8 @@ model LearningModule {
   updatedAt   DateTime           @updatedAt
   progress    LearningProgress[]
 
+  @@index([title])
+  @@index([points])
   @@map("learning_modules")
 }
 
@@ -182,6 +211,9 @@ model GamificationProfile {
   updatedAt DateTime @updatedAt
   user      User     @relation(fields: [userId], references: [id])
 
+  @@index([userId])
+  @@index([level])
+  @@index([points])
   @@map("gamification_profiles")
 }
 
@@ -196,6 +228,9 @@ model Notification {
   updatedAt DateTime         @updatedAt
   user      User             @relation(fields: [userId], references: [id])
 
+  @@index([userId])
+  @@index([type])
+  @@index([read])
   @@map("notifications")
 }
 

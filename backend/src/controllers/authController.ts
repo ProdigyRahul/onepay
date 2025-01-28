@@ -1,10 +1,8 @@
 import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
 import { generateToken } from '../utils/jwt';
 import { OTPData, ApiResponse, SafeUser } from '../types';
 import { twilioService } from '../services/twilioService';
-
-const prisma = new PrismaClient();
+import { prisma } from '../lib/prisma';
 
 export const generateOTP = async (
   req: Request<{}, {}, { phoneNumber: string }>,

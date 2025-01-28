@@ -1,4 +1,4 @@
-import { PrismaClient, TransactionType, Wallet } from '@prisma/client';
+import { TransactionType, Wallet } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { ApiError } from '../utils/apiError';
 import {
@@ -8,8 +8,7 @@ import {
   WalletLimitDTO,
   WalletStats,
 } from '../types/wallet';
-
-const prisma = new PrismaClient();
+import { prisma } from '../lib/prisma';
 
 export class WalletService {
   // Create a new wallet
@@ -272,4 +271,4 @@ export class WalletService {
       },
     });
   }
-} 
+}

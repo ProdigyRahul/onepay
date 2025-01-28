@@ -7,11 +7,11 @@ exports.WalletService = void 0;
 const client_1 = require("@prisma/client");
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const apiError_1 = require("../utils/apiError");
-const prisma = new client_1.PrismaClient();
+const prisma_1 = require("../lib/prisma");
 class WalletService {
     static async createWallet(userId, data) {
         const hashedPin = await bcryptjs_1.default.hash(data.pin, 10);
-        return prisma.wallet.create({
+        return prisma_1.prisma.wallet.create({
             data: {
                 userId,
                 pin: hashedPin,
@@ -22,7 +22,7 @@ class WalletService {
         });
     }
     static async verifyPin(walletId, pin) {
-        const wallet = await prisma.wallet.findUnique({
+        const wallet = await prisma_1.prisma.wallet.findUnique({
             where: { id: walletId },
         });
         if (!wallet) {
@@ -32,7 +32,7 @@ class WalletService {
             if (wallet.blockedUntil && wallet.blockedUntil > new Date()) {
                 throw new apiError_1.ApiError(403, 'Wallet is blocked. Try again later.');
             }
-            await prisma.wallet.update({
+            await prisma_1.prisma.wallet.update({
                 where: { id: walletId },
                 data: { isBlocked: false, pinAttempts: 0 },
             });
@@ -41,7 +41,7 @@ class WalletService {
         if (!isValid) {
             const attempts = wallet.pinAttempts + 1;
             if (attempts >= 3) {
-                await prisma.wallet.update({
+                await prisma_1.prisma.wallet.update({
                     where: { id: walletId },
                     data: {
                         isBlocked: true,
@@ -51,14 +51,14 @@ class WalletService {
                 });
                 throw new apiError_1.ApiError(403, 'Wallet blocked due to too many invalid PIN attempts');
             }
-            await prisma.wallet.update({
+            await prisma_1.prisma.wallet.update({
                 where: { id: walletId },
                 data: { pinAttempts: attempts },
             });
             throw new apiError_1.ApiError(401, `Invalid PIN. ${3 - attempts} attempts remaining`);
         }
         if (wallet.pinAttempts > 0) {
-            await prisma.wallet.update({
+            await prisma_1.prisma.wallet.update({
                 where: { id: walletId },
                 data: { pinAttempts: 0 },
             });
@@ -66,7 +66,7 @@ class WalletService {
         return true;
     }
     static async getWalletStats(walletId) {
-        const wallet = await prisma.wallet.findUnique({
+        const wallet = await prisma_1.prisma.wallet.findUnique({
             where: { id: walletId },
         });
         if (!wallet) {
@@ -76,7 +76,7 @@ class WalletService {
         today.setHours(0, 0, 0, 0);
         const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
         const [dailySpent, monthlySpent] = await Promise.all([
-            prisma.transaction.aggregate({
+            prisma_1.prisma.transaction.aggregate({
                 where: {
                     walletId,
                     type: client_1.TransactionType.DEBIT,
@@ -84,7 +84,7 @@ class WalletService {
                 },
                 _sum: { amount: true },
             }),
-            prisma.transaction.aggregate({
+            prisma_1.prisma.transaction.aggregate({
                 where: {
                     walletId,
                     type: client_1.TransactionType.DEBIT,
@@ -102,7 +102,7 @@ class WalletService {
         };
     }
     static async addMoney(walletId, data) {
-        return prisma.$transaction(async (tx) => {
+        return prisma_1.prisma.$transaction(async (tx) => {
             const wallet = await tx.wallet.findUnique({
                 where: { id: walletId },
             });
@@ -131,7 +131,7 @@ class WalletService {
         });
     }
     static async transfer(senderWalletId, data) {
-        await prisma.$transaction(async (tx) => {
+        await prisma_1.prisma.$transaction(async (tx) => {
             const senderWallet = await tx.wallet.findUnique({
                 where: { id: senderWalletId },
             });
@@ -198,7 +198,7 @@ class WalletService {
     }
     static async updateLimits(walletId, data) {
         await this.verifyPin(walletId, data.pin);
-        return prisma.wallet.update({
+        return prisma_1.prisma.wallet.update({
             where: { id: walletId },
             data: {
                 dailyLimit: data.dailyLimit,
