@@ -4,9 +4,7 @@ exports.updateKYCValidation = exports.updateProfileValidation = void 0;
 const zod_1 = require("zod");
 exports.updateProfileValidation = zod_1.z.object({
     body: zod_1.z.object({
-        firstName: zod_1.z.string().min(2, 'First name must be at least 2 characters').max(50, 'First name must not exceed 50 characters'),
-        lastName: zod_1.z.string().min(2, 'Last name must be at least 2 characters').max(50, 'Last name must not exceed 50 characters'),
-        email: zod_1.z.string().email('Invalid email address'),
+        email: zod_1.z.string().email('Invalid email format'),
     }),
 });
 exports.updateKYCValidation = zod_1.z.object({

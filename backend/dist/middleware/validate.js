@@ -1,20 +1,27 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.validate = void 0;
+const zod_1 = require("zod");
 const validate = (schema) => async (req, res, next) => {
-    var _a, _b;
+    var _a;
     try {
-        await schema.parseAsync({
-            body: req.body,
-            query: req.query,
-            params: req.params,
-        });
+        console.log('Validating request body:', req.body);
+        const result = await schema.parseAsync(req.body);
+        console.log('Validation successful:', result);
         return next();
     }
     catch (error) {
+        console.error('Validation error:', error);
+        if (error instanceof zod_1.ZodError) {
+            return res.status(400).json({
+                success: false,
+                error: ((_a = error.errors[0]) === null || _a === void 0 ? void 0 : _a.message) || 'Validation failed',
+                details: error.errors
+            });
+        }
         return res.status(400).json({
             success: false,
-            error: ((_b = (_a = error.errors) === null || _a === void 0 ? void 0 : _a[0]) === null || _b === void 0 ? void 0 : _b.message) || 'Validation failed',
+            error: 'Validation failed',
         });
     }
 };

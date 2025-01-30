@@ -17,7 +17,7 @@ exports.walletController = {
                     currency: wallet.currency,
                     dailyLimit: wallet.dailyLimit,
                     monthlyLimit: wallet.monthlyLimit,
-                    isActive: wallet.isActive,
+                    isActive: !wallet.isBlocked,
                 },
             });
         }
@@ -38,7 +38,7 @@ exports.walletController = {
     },
     getWallet: async (req, res) => {
         try {
-            const stats = await walletService_1.WalletService.getWalletStats(req.params.walletId);
+            const stats = await walletService_1.WalletService.getWalletStats(req.user.id);
             res.json({
                 success: true,
                 data: stats,
@@ -59,17 +59,12 @@ exports.walletController = {
             }
         }
     },
-    addMoney: async (req, res) => {
+    getWalletBalance: async (req, res) => {
         try {
-            const walletId = req.params.walletId;
-            const transactionData = req.body;
-            const wallet = await walletService_1.WalletService.addMoney(walletId, transactionData);
+            const wallet = await walletService_1.WalletService.getWalletBalance(req.user.id);
             res.json({
                 success: true,
-                data: {
-                    balance: wallet.balance,
-                    currency: wallet.currency,
-                },
+                data: wallet,
             });
         }
         catch (error) {
@@ -82,19 +77,19 @@ exports.walletController = {
             else {
                 res.status(500).json({
                     success: false,
-                    error: 'Error adding money to wallet',
+                    error: 'Error fetching wallet balance',
                 });
             }
         }
     },
     transfer: async (req, res) => {
         try {
-            const walletId = req.params.walletId;
+            const userId = req.user.id;
             const transferData = req.body;
-            await walletService_1.WalletService.transfer(walletId, transferData);
+            const transaction = await walletService_1.WalletService.transfer(userId, transferData.toWalletId, transferData.amount, transferData.description || 'Transfer');
             res.json({
                 success: true,
-                message: 'Transfer completed successfully',
+                data: transaction,
             });
         }
         catch (error) {
@@ -107,22 +102,17 @@ exports.walletController = {
             else {
                 res.status(500).json({
                     success: false,
-                    error: 'Error processing transfer',
+                    error: 'Error transferring money',
                 });
             }
         }
     },
-    updateLimits: async (req, res) => {
+    getWalletStats: async (req, res) => {
         try {
-            const walletId = req.params.walletId;
-            const limitData = req.body;
-            const wallet = await walletService_1.WalletService.updateLimits(walletId, limitData);
+            const stats = await walletService_1.WalletService.getWalletStats(req.user.id);
             res.json({
                 success: true,
-                data: {
-                    dailyLimit: wallet.dailyLimit,
-                    monthlyLimit: wallet.monthlyLimit,
-                },
+                data: stats,
             });
         }
         catch (error) {
@@ -135,7 +125,7 @@ exports.walletController = {
             else {
                 res.status(500).json({
                     success: false,
-                    error: 'Error updating wallet limits',
+                    error: 'Error fetching wallet stats',
                 });
             }
         }

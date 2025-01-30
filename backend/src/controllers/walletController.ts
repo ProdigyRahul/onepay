@@ -2,12 +2,6 @@ import { Response } from 'express';
 import { WalletService } from '../services/walletService';
 import { ApiError } from '../utils/apiError';
 import { AuthenticatedRequest } from '../types';
-import {
-  CreateWalletDTO,
-  TransactionDTO,
-  TransferDTO,
-  WalletLimitDTO,
-} from '../types/wallet';
 
 export const walletController = {
   // Create wallet
@@ -17,7 +11,7 @@ export const walletController = {
   ): Promise<void> => {
     try {
       const userId = req.user.id;
-      const walletData: CreateWalletDTO = req.body;
+      const walletData: any = req.body;
 
       const wallet = await WalletService.createWallet(userId, walletData);
 
@@ -29,7 +23,7 @@ export const walletController = {
           currency: wallet.currency,
           dailyLimit: wallet.dailyLimit,
           monthlyLimit: wallet.monthlyLimit,
-          isActive: wallet.isActive,
+          isActive: !wallet.isBlocked,
         },
       });
     } catch (error) {
@@ -53,7 +47,7 @@ export const walletController = {
     res: Response
   ): Promise<void> => {
     try {
-      const stats = await WalletService.getWalletStats(req.params.walletId);
+      const stats = await WalletService.getWalletStats(req.user.id);
 
       res.json({
         success: true,
@@ -74,23 +68,17 @@ export const walletController = {
     }
   },
 
-  // Add money to wallet
-  addMoney: async (
+  // Get wallet balance
+  getWalletBalance: async (
     req: AuthenticatedRequest,
     res: Response
   ): Promise<void> => {
     try {
-      const walletId = req.params.walletId;
-      const transactionData: TransactionDTO = req.body;
-
-      const wallet = await WalletService.addMoney(walletId, transactionData);
+      const wallet = await WalletService.getWalletBalance(req.user.id);
 
       res.json({
         success: true,
-        data: {
-          balance: wallet.balance,
-          currency: wallet.currency,
-        },
+        data: wallet,
       });
     } catch (error) {
       if (error instanceof ApiError) {
@@ -101,7 +89,7 @@ export const walletController = {
       } else {
         res.status(500).json({
           success: false,
-          error: 'Error adding money to wallet',
+          error: 'Error fetching wallet balance',
         });
       }
     }
@@ -113,14 +101,19 @@ export const walletController = {
     res: Response
   ): Promise<void> => {
     try {
-      const walletId = req.params.walletId;
-      const transferData: TransferDTO = req.body;
+      const userId = req.user.id;
+      const transferData: any = req.body;
 
-      await WalletService.transfer(walletId, transferData);
+      const transaction = await WalletService.transfer(
+        userId,
+        transferData.toWalletId,
+        transferData.amount,
+        transferData.description || 'Transfer'
+      );
 
       res.json({
         success: true,
-        message: 'Transfer completed successfully',
+        data: transaction,
       });
     } catch (error) {
       if (error instanceof ApiError) {
@@ -131,29 +124,23 @@ export const walletController = {
       } else {
         res.status(500).json({
           success: false,
-          error: 'Error processing transfer',
+          error: 'Error transferring money',
         });
       }
     }
   },
 
-  // Update wallet limits
-  updateLimits: async (
+  // Get wallet stats for dashboard
+  getWalletStats: async (
     req: AuthenticatedRequest,
     res: Response
   ): Promise<void> => {
     try {
-      const walletId = req.params.walletId;
-      const limitData: WalletLimitDTO = req.body;
-
-      const wallet = await WalletService.updateLimits(walletId, limitData);
+      const stats = await WalletService.getWalletStats(req.user.id);
 
       res.json({
         success: true,
-        data: {
-          dailyLimit: wallet.dailyLimit,
-          monthlyLimit: wallet.monthlyLimit,
-        },
+        data: stats,
       });
     } catch (error) {
       if (error instanceof ApiError) {
@@ -164,9 +151,9 @@ export const walletController = {
       } else {
         res.status(500).json({
           success: false,
-          error: 'Error updating wallet limits',
+          error: 'Error fetching wallet stats',
         });
       }
     }
   },
-}; 
+};

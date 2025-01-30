@@ -1,8 +1,10 @@
 import { Request, Response } from 'express';
 import { generateToken } from '../utils/jwt';
-import { OTPData, ApiResponse, SafeUser } from '../types';
+import { OTPData, ApiResponse, SafeUser, TokenPayload } from '../types';
 import { twilioService } from '../services/twilioService';
 import { prisma } from '../lib/prisma';
+import { Role } from '@prisma/client';
+import bcrypt from 'bcryptjs';
 
 export const generateOTP = async (
   req: Request<{}, {}, { phoneNumber: string }>,
@@ -152,6 +154,73 @@ export const verifyOTP = async (
     res.status(500).json({
       success: false,
       error: 'Failed to verify OTP'
+    });
+  }
+};
+
+export const adminLogin = async (
+  req: Request<{}, {}, { phoneNumber: string; password: string }>,
+  res: Response<ApiResponse<{ token: string; user: SafeUser }>>
+): Promise<void> => {
+  try {
+    const { phoneNumber, password } = req.body;
+
+    // Find admin user
+    const admin = await prisma.user.findFirst({
+      where: {
+        phoneNumber,
+        role: Role.ADMIN,
+        isActive: true,
+      },
+    });
+
+    if (!admin || !admin.password) {
+      res.status(401).json({
+        success: false,
+        error: 'Invalid admin credentials'
+      });
+      return;
+    }
+
+    // Verify password
+    const isValidPassword = await bcrypt.compare(password, admin.password);
+    if (!isValidPassword) {
+      res.status(401).json({
+        success: false,
+        error: 'Invalid admin credentials'
+      });
+      return;
+    }
+
+    // Generate token
+    const tokenPayload: TokenPayload = {
+      userId: admin.id,
+      role: admin.role
+    };
+    const token = generateToken(tokenPayload);
+
+    res.json({
+      success: true,
+      data: {
+        token,
+        user: {
+          id: admin.id,
+          phoneNumber: admin.phoneNumber,
+          email: admin.email,
+          firstName: admin.firstName,
+          lastName: admin.lastName,
+          role: admin.role,
+          isVerified: admin.isVerified,
+          createdAt: admin.createdAt,
+          updatedAt: admin.updatedAt
+        },
+      },
+    });
+  } catch (error) {
+    console.error('Admin login error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to login'
     });
   }
 };

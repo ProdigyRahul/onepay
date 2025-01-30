@@ -8,6 +8,7 @@ const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const app_1 = __importDefault(require("../../app"));
 const setup_1 = require("../setup");
 const jwt_1 = require("../../utils/jwt");
+const client_1 = require("@prisma/client");
 describe('Wallet Controller', () => {
     let authToken;
     let walletId;
@@ -15,7 +16,6 @@ describe('Wallet Controller', () => {
     let testUser;
     beforeEach(async () => {
         await setup_1.prisma.transaction.deleteMany();
-        await setup_1.prisma.transfer.deleteMany();
         await setup_1.prisma.wallet.deleteMany();
         await setup_1.prisma.oTP.deleteMany();
         await setup_1.prisma.user.deleteMany();
@@ -26,11 +26,11 @@ describe('Wallet Controller', () => {
                 firstName: 'Test',
                 lastName: 'User',
                 isVerified: true,
-                role: 'USER',
+                role: client_1.Role.USER,
             },
         });
         userId = testUser.id;
-        const tokenPayload = { userId: testUser.id, role: 'USER' };
+        const tokenPayload = { userId: testUser.id, role: client_1.Role.USER };
         authToken = (0, jwt_1.generateToken)(tokenPayload);
         const decoded = (0, jwt_1.verifyToken)(authToken);
         if (!decoded || decoded.userId !== testUser.id) {
@@ -40,7 +40,6 @@ describe('Wallet Controller', () => {
     });
     afterEach(async () => {
         await setup_1.prisma.transaction.deleteMany();
-        await setup_1.prisma.transfer.deleteMany();
         await setup_1.prisma.wallet.deleteMany();
         await setup_1.prisma.oTP.deleteMany();
         await setup_1.prisma.user.deleteMany();
@@ -149,89 +148,6 @@ describe('Wallet Controller', () => {
             });
             expect(res.status).toBe(400);
             expect(res.body.success).toBe(false);
-        });
-    });
-    describe('POST /api/wallets/:walletId/transfer', () => {
-        let receiverWalletId;
-        beforeEach(async () => {
-            const senderWallet = await setup_1.prisma.wallet.create({
-                data: {
-                    userId,
-                    pin: await bcryptjs_1.default.hash('123456', 10),
-                    currency: 'USD',
-                    dailyLimit: 1000,
-                    monthlyLimit: 5000,
-                    balance: 500,
-                },
-            });
-            walletId = senderWallet.id;
-            const receiver = await setup_1.prisma.user.create({
-                data: {
-                    phoneNumber: `+1${Math.floor(Math.random() * 1000000000)}`,
-                    firstName: 'Receiver',
-                    lastName: 'User',
-                    isVerified: true,
-                    role: 'USER',
-                },
-            });
-            const receiverWallet = await setup_1.prisma.wallet.create({
-                data: {
-                    userId: receiver.id,
-                    pin: await bcryptjs_1.default.hash('123456', 10),
-                    currency: 'USD',
-                    dailyLimit: 1000,
-                    monthlyLimit: 5000,
-                },
-            });
-            receiverWalletId = receiverWallet.id;
-        });
-        it('should transfer money between wallets', async () => {
-            const res = await (0, supertest_1.default)(app_1.default)
-                .post(`/api/wallets/${walletId}/transfer`)
-                .set('Authorization', `Bearer ${authToken}`)
-                .send({
-                amount: 50,
-                receiverWalletId,
-                pin: '123456',
-                description: 'Transfer test',
-            });
-            expect(res.status).toBe(200);
-            expect(res.body.success).toBe(true);
-            expect(res.body.message).toBe('Transfer completed successfully');
-            const senderWallet = await setup_1.prisma.wallet.findUnique({
-                where: { id: walletId },
-            });
-            expect(senderWallet === null || senderWallet === void 0 ? void 0 : senderWallet.balance).toBe(450);
-            const receiverWallet = await setup_1.prisma.wallet.findUnique({
-                where: { id: receiverWalletId },
-            });
-            expect(receiverWallet === null || receiverWallet === void 0 ? void 0 : receiverWallet.balance).toBe(50);
-        });
-        it('should fail with insufficient balance', async () => {
-            const res = await (0, supertest_1.default)(app_1.default)
-                .post(`/api/wallets/${walletId}/transfer`)
-                .set('Authorization', `Bearer ${authToken}`)
-                .send({
-                amount: 1000,
-                receiverWalletId,
-                pin: '123456',
-            });
-            expect(res.status).toBe(400);
-            expect(res.body.success).toBe(false);
-            expect(res.body.error).toBe('Insufficient balance');
-        });
-        it('should fail with invalid PIN', async () => {
-            const res = await (0, supertest_1.default)(app_1.default)
-                .post(`/api/wallets/${walletId}/transfer`)
-                .set('Authorization', `Bearer ${authToken}`)
-                .send({
-                amount: 10,
-                receiverWalletId,
-                pin: '000000',
-            });
-            expect(res.status).toBe(401);
-            expect(res.body.success).toBe(false);
-            expect(res.body.error).toContain('Invalid PIN');
         });
     });
     describe('PUT /api/wallets/:walletId/limits', () => {

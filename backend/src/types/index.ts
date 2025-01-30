@@ -1,5 +1,5 @@
 import { Request } from 'express';
-import { Role, KYCStatus } from '@prisma/client';
+import { Role, KYCStatus, Wallet } from '@prisma/client';
 import { ParamsDictionary } from 'express-serve-static-core';
 
 export type IncomeRange =
@@ -74,6 +74,7 @@ export interface AuthenticatedUser {
 
 export interface AuthenticatedRequest extends Request<ParamsDictionary> {
   user: AuthenticatedUser;
+  wallet?: Wallet; // Added by wallet ownership middleware
 }
 
 export interface FileRequest extends AuthenticatedRequest {

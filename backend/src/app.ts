@@ -9,6 +9,8 @@ import authRoutes from './routes/authRoutes';
 import walletRoutes from './routes/walletRoutes';
 import kycRoutes from './routes/kycRoutes';
 import onboardingRoutes from './routes/onboardingRoutes';
+import profileRoutes from './routes/profileRoutes';
+import adminRoutes from './routes/adminRoutes';
 import { rateLimit } from 'express-rate-limit';
 import logger from './utils/logger';
 
@@ -90,9 +92,11 @@ app.use(apiLimiter);
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
-app.use('/api/wallets', walletRoutes);
-app.use('/api/onboarding', onboardingRoutes);
+app.use('/api/wallet', walletRoutes);
 app.use('/api/kyc', kycRoutes);
+app.use('/api/onboarding', onboardingRoutes);
+app.use('/api/profile', profileRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Root route with welcome message
 app.get('/', (_req: Request, res: Response) => {
