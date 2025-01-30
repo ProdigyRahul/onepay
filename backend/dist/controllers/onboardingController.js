@@ -65,11 +65,28 @@ exports.onboardingController = {
     },
     updateAge: async (req, res) => {
         try {
+            console.log('=== Update Age Start ===');
+            console.log('User:', req.user);
+            console.log('Request body:', req.body);
             const userId = req.user.id;
             const { age } = req.body;
+            console.log('Parsed age:', age);
+            console.log('Fetching user with KYC...');
+            const existingUser = await prisma_1.prisma.user.findUnique({
+                where: { id: userId },
+                include: { kyc: true },
+            });
+            console.log('Existing user:', existingUser);
+            if (!(existingUser === null || existingUser === void 0 ? void 0 : existingUser.kyc)) {
+                console.error('KYC record not found');
+                throw new apiError_1.ApiError(400, 'Please complete profile with PAN number first');
+            }
+            console.log('Calculating date of birth...');
             const today = new Date();
             const birthYear = today.getFullYear() - age;
-            const dateOfBirth = new Date(birthYear, today.getMonth(), today.getDate());
+            const dateOfBirth = new Date(birthYear, 6, 1);
+            console.log('Calculated date of birth:', dateOfBirth);
+            console.log('Updating user...');
             const user = await prisma_1.prisma.user.update({
                 where: { id: userId },
                 data: {
@@ -83,26 +100,37 @@ exports.onboardingController = {
                     kyc: true,
                 },
             });
+            console.log('Updated user:', user);
             if (!user.kyc) {
-                throw new apiError_1.ApiError(400, 'Please complete profile with PAN number first');
+                console.error('KYC record not found after update');
+                throw new apiError_1.ApiError(500, 'KYC record not found after update');
             }
+            console.log('Sending response...');
             res.json({
                 success: true,
+                message: 'Age updated successfully',
                 data: {
                     age,
                     dateOfBirth: user.kyc.dateOfBirth,
                 },
             });
+            console.log('=== Update Age End ===');
         }
         catch (error) {
+            console.error('=== Update Age Error ===');
+            console.error('Error details:', error);
             if (error instanceof apiError_1.ApiError) {
+                console.error('API Error:', {
+                    statusCode: error.statusCode,
+                    message: error.message
+                });
                 res.status(error.statusCode).json({
                     success: false,
                     error: error.message,
                 });
             }
             else {
-                console.error('Age Update Error:', error);
+                console.error('Unexpected error:', error);
                 res.status(500).json({
                     success: false,
                     error: 'Error updating age',

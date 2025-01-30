@@ -18,11 +18,19 @@ interface OTPVerificationResponse {
 }
 
 export const verifyOTP = async (data: { phoneNumber: string; code: string }): Promise<OTPVerificationResponse> => {
-  const response = await apiClient.post('/auth/verify-otp', data);
-  return response.data;
+  try {
+    const response = await apiClient.post('/auth/otp/verify', data);
+    return response.data;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.error || 'Failed to verify OTP');
+  }
 };
 
-export const generateOTP = async (phoneNumber: string) => {
-  const response = await apiClient.post('/auth/generate-otp', { phoneNumber });
-  return response.data;
+export const generateOTP = async (phoneNumber: string): Promise<{ success: boolean; message?: string }> => {
+  try {
+    const response = await apiClient.post('/auth/otp/generate', { phoneNumber });
+    return response.data;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.error || 'Failed to generate OTP');
+  }
 };

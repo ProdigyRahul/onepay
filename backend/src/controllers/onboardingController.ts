@@ -3,6 +3,7 @@ import { Prisma, IncomeRange as PrismaIncomeRange, SpendingHabit, UserGoal } fro
 import { ApiError } from '../utils/apiError';
 import { AuthenticatedRequest, ProfileData, FinancialProfileData, ApiResponse } from '../types';
 import { prisma } from '../lib/prisma';
+
 export const onboardingController = {
   // Update user profile (name, email, PAN)
   updateProfile: async (
@@ -74,14 +75,37 @@ export const onboardingController = {
     res: Response<ApiResponse<any>>
   ): Promise<void> => {
     try {
+      console.log('=== Update Age Start ===');
+      console.log('User:', req.user);
+      console.log('Request body:', req.body);
+      
       const userId = req.user.id;
       const { age } = req.body;
+      
+      console.log('Parsed age:', age);
+
+      // First check if user has KYC record
+      console.log('Fetching user with KYC...');
+      const existingUser = await prisma.user.findUnique({
+        where: { id: userId },
+        include: { kyc: true },
+      });
+      console.log('Existing user:', existingUser);
+
+      if (!existingUser?.kyc) {
+        console.error('KYC record not found');
+        throw new ApiError(400, 'Please complete profile with PAN number first');
+      }
 
       // Calculate date of birth from age
+      console.log('Calculating date of birth...');
       const today = new Date();
       const birthYear = today.getFullYear() - age;
-      const dateOfBirth = new Date(birthYear, today.getMonth(), today.getDate());
+      // Set to middle of the year to avoid invalid date issues
+      const dateOfBirth = new Date(birthYear, 6, 1);
+      console.log('Calculated date of birth:', dateOfBirth);
 
+      console.log('Updating user...');
       const user = await prisma.user.update({
         where: { id: userId },
         data: {
@@ -95,26 +119,40 @@ export const onboardingController = {
           kyc: true,
         },
       });
+      console.log('Updated user:', user);
 
+      // Since we checked for KYC existence above and we're including it in the query
+      // TypeScript should know it exists, but let's add a runtime check just to be safe
       if (!user.kyc) {
-        throw new ApiError(400, 'Please complete profile with PAN number first');
+        console.error('KYC record not found after update');
+        throw new ApiError(500, 'KYC record not found after update');
       }
 
+      console.log('Sending response...');
       res.json({
         success: true,
+        message: 'Age updated successfully',
         data: {
           age,
           dateOfBirth: user.kyc.dateOfBirth,
         },
       });
+      console.log('=== Update Age End ===');
     } catch (error) {
+      console.error('=== Update Age Error ===');
+      console.error('Error details:', error);
+      
       if (error instanceof ApiError) {
+        console.error('API Error:', {
+          statusCode: error.statusCode,
+          message: error.message
+        });
         res.status(error.statusCode).json({
           success: false,
           error: error.message,
         });
       } else {
-        console.error('Age Update Error:', error);
+        console.error('Unexpected error:', error);
         res.status(500).json({
           success: false,
           error: 'Error updating age',

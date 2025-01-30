@@ -1,27 +1,27 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, StatusBar, Alert, ActivityIndicator } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { verifyOTP } from '../../services/api/auth';
+import { verifyOTP, generateOTP } from '../../services/api/auth';
 import { CustomKeyboard } from '../../components/common/CustomKeyboard';
 import { COLORS } from '../../theme/colors';
 import { FONTS, FONT_SIZES } from '../../theme/typography';
-import { wp, hp } from '../../utils/responsive';
 import { RootStackParamList } from '../../navigation/types';
-import { useAppDispatch, useAppSelector } from '../../store/store';
-import { setCredentials, setLoading, setError } from '../../store/slices/authSlice';
+import { useAppDispatch, useAppSelector, RootState } from '../../store/store';
+import { setCredentials, setLoading } from '../../store/slices/authSlice';
 import { onboardingApi } from '../../services/api/onboarding';
+import { wp, hp } from '../../utils/responsive';
+
+const OTP_LENGTH = 6;
 
 type OTPScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'OTP'>;
 type OTPScreenRouteProp = RouteProp<RootStackParamList, 'OTP'>;
-
-const OTP_LENGTH = 6;
 
 const OTPScreen = () => {
   const navigation = useNavigation<OTPScreenNavigationProp>();
   const route = useRoute<OTPScreenRouteProp>();
   const dispatch = useAppDispatch();
-  const { isLoading } = useAppSelector((state) => state.auth);
+  const { isLoading } = useAppSelector((state: RootState) => state.auth);
 
   const { phoneNumber } = route.params;
   const [otp, setOtp] = useState('');
@@ -59,51 +59,52 @@ const OTPScreen = () => {
           token: response.data.token,
         }));
 
-        // Check onboarding status
-        const statusResponse = await onboardingApi.getOnboardingStatus();
-        const status = statusResponse.data;
+        try {
+          const statusResponse = await onboardingApi.getOnboardingStatus();
+          const status = statusResponse.data;
 
-        if (status.onboardingComplete) {
-          navigation.reset({
-            index: 0,
-            routes: [{ name: 'Home' }],
-          });
-        } else {
-          // Navigate to the appropriate onboarding screen
-          if (!status.profileCompleted) {
+          if (status.onboardingComplete) {
             navigation.reset({
               index: 0,
-              routes: [{ name: 'NotificationsPermission' }],
-            });
-          } else if (!status.ageVerified) {
-            navigation.reset({
-              index: 0,
-              routes: [{ name: 'OnboardingAge' }],
-            });
-          } else if (!status.primaryGoalSet) {
-            navigation.reset({
-              index: 0,
-              routes: [{ name: 'OnboardingPurpose' }],
-            });
-          } else if (!status.incomeRangeSet) {
-            navigation.reset({
-              index: 0,
-              routes: [{ name: 'OnboardingIncome' }],
+              routes: [{ name: 'Home' }],
             });
           } else {
             navigation.reset({
               index: 0,
-              routes: [{ name: 'OnboardingSpending' }],
+              routes: [{ name: 'OnboardingAge' }],
             });
           }
+        } catch (error) {
+          // If onboarding status check fails, default to onboarding flow
+          navigation.reset({
+            index: 0,
+            routes: [{ name: 'OnboardingAge' }],
+          });
         }
+      } else {
+        Alert.alert('Error', 'Invalid OTP. Please try again.');
       }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to verify OTP';
-      dispatch(setError(errorMessage));
-      Alert.alert('Error', errorMessage);
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Failed to verify OTP. Please try again.');
     } finally {
       dispatch(setLoading(false));
+    }
+  };
+
+  const handleResendOTP = async () => {
+    if (timer > 0) {
+      return;
+    }
+    try {
+      const response = await generateOTP(phoneNumber);
+      if (response.success) {
+        setTimer(60);
+        Alert.alert('Success', 'OTP resent successfully');
+      } else {
+        Alert.alert('Error', response.message || 'Failed to resend OTP');
+      }
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Failed to resend OTP');
     }
   };
 
@@ -144,7 +145,7 @@ const OTPScreen = () => {
               {timer > 0 ? `Resend code in ${timer}s` : 'Didn\'t receive the code?'}
             </Text>
             {timer === 0 && (
-              <TouchableOpacity style={styles.resendButton}>
+              <TouchableOpacity style={styles.resendButton} onPress={handleResendOTP}>
                 <Text style={styles.resendButtonText}>Resend OTP</Text>
               </TouchableOpacity>
             )}

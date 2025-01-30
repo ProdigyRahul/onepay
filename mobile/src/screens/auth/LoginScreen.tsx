@@ -42,21 +42,24 @@ const LoginScreen = () => {
   }, [phoneNumber]);
 
   const handleContinue = async () => {
-    if (phoneNumber.length !== 10) {return;}
+    if (phoneNumber.length !== 10) {
+      Alert.alert('Invalid Number', 'Please enter a valid 10-digit mobile number');
+      return;
+    }
 
     try {
       setIsLoading(true);
       const formattedPhone = `+91${phoneNumber}`;
       const response = await generateOTP(formattedPhone);
-      navigation.navigate('OTP', {
-        phoneNumber: formattedPhone,
-        otpFromResponse: response.otp,
-      });
+      if (response.success) {
+        navigation.navigate('OTP', {
+          phoneNumber: formattedPhone,
+        });
+      } else {
+        Alert.alert('Error', response.message || 'Failed to send OTP. Please try again.');
+      }
     } catch (error: any) {
-      Alert.alert(
-        'Error',
-        error.response?.data?.error || 'Failed to send OTP'
-      );
+      Alert.alert('Error', error.message || 'Something went wrong. Please try again.');
     } finally {
       setIsLoading(false);
     }

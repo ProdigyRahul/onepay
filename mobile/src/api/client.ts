@@ -36,20 +36,11 @@ apiClient.interceptors.request.use(
 // Response interceptor for API calls
 apiClient.interceptors.response.use(
   (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
-
+  (error) => {
     // Handle 401 Unauthorized errors
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-
-      // Clear storage and trigger logout
-      StorageUtils.clearStorage();
+    if (error.response?.status === 401) {
       store.dispatch(logout());
-
-      return Promise.reject(error);
     }
-
     return Promise.reject(error);
   }
 );

@@ -241,7 +241,7 @@ const styles = StyleSheet.create({
   subtitle: {
     fontFamily: FONTS.regular,
     fontSize: FONT_SIZES.md,
-    color: COLORS.textSecondary,
+    color: COLORS.textLight,
     lineHeight: hp(3),
   },
   formContainer: {
@@ -254,7 +254,7 @@ const styles = StyleSheet.create({
   label: {
     fontFamily: FONTS.medium,
     fontSize: FONT_SIZES.sm,
-    color: COLORS.textSecondary,
+    color: COLORS.textLight,
   },
   labelFocused: {
     color: COLORS.primary,
@@ -274,7 +274,7 @@ const styles = StyleSheet.create({
   },
   caption: {
     fontSize: FONT_SIZES.xs,
-    color: COLORS.textSecondary,
+    color: COLORS.textLight,
     marginTop: hp(0.5),
     fontFamily: FONTS.regular,
     lineHeight: hp(1.8),
