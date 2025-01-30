@@ -1,274 +1,268 @@
-import { TransactionType, Wallet } from '@prisma/client';
+import { TransactionType, Wallet, TransactionStatus, KYCStatus } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { ApiError } from '../utils/apiError';
+import { WalletType } from '../types/wallet';
+import { prisma } from '../lib/prisma';
+import { generateTransactionId, generateAccountNumber } from '../utils/transactionUtils';
 import {
   CreateWalletDTO,
   TransactionDTO,
-  TransferDTO,
-  WalletLimitDTO,
   WalletStats,
+  RecentTransaction,
+  WalletResponse
 } from '../types/wallet';
-import { prisma } from '../lib/prisma';
 
 export class WalletService {
-  // Create a new wallet
+  /**
+   * Create a new wallet
+   */
   static async createWallet(userId: string, data: CreateWalletDTO): Promise<Wallet> {
+    const existingWallet = await prisma.wallet.findUnique({
+      where: { userId }
+    });
+
+    if (existingWallet) {
+      throw new ApiError(400, 'User already has a wallet');
+    }
+
+    const accountNumber = await generateAccountNumber();
     const hashedPin = await bcrypt.hash(data.pin, 10);
 
-    return prisma.wallet.create({
+    return await prisma.wallet.create({
       data: {
         userId,
+        accountNumber,
         pin: hashedPin,
-        currency: data.currency,
-        dailyLimit: data.dailyLimit,
-        monthlyLimit: data.monthlyLimit,
-      },
+        currency: data.currency || 'INR',
+        type: data.type || WalletType.SAVINGS,
+        dailyLimit: data.dailyLimit || 10000,
+        monthlyLimit: data.monthlyLimit || 100000
+      }
     });
   }
 
-  // Verify wallet PIN
-  static async verifyPin(walletId: string, pin: string): Promise<boolean> {
+  /**
+   * Get wallet stats including user info for dashboard
+   */
+  static async getWalletStats(userId: string): Promise<WalletStats> {
     const wallet = await prisma.wallet.findUnique({
-      where: { id: walletId },
-    });
-
-    if (!wallet) {
-      throw new ApiError(404, 'Wallet not found');
-    }
-
-    // Check if wallet is blocked
-    if (wallet.isBlocked) {
-      if (wallet.blockedUntil && wallet.blockedUntil > new Date()) {
-        throw new ApiError(403, 'Wallet is blocked. Try again later.');
-      }
-      // Unblock wallet if block duration has passed
-      await prisma.wallet.update({
-        where: { id: walletId },
-        data: { isBlocked: false, pinAttempts: 0 },
-      });
-    }
-
-    const isValid = await bcrypt.compare(pin, wallet.pin);
-
-    if (!isValid) {
-      const attempts = wallet.pinAttempts + 1;
-      if (attempts >= 3) {
-        // Block wallet for 24 hours
-        await prisma.wallet.update({
-          where: { id: walletId },
-          data: {
-            isBlocked: true,
-            blockedUntil: new Date(Date.now() + 24 * 60 * 60 * 1000),
-            pinAttempts: 0,
+      where: { userId },
+      include: {
+        user: {
+          select: {
+            firstName: true,
+            lastName: true,
+            email: true,
+            phoneNumber: true,
+            kyc: {
+              select: {
+                status: true
+              }
+            }
+          }
+        },
+        transactions: {
+          where: {
+            status: TransactionStatus.COMPLETED
           },
-        });
-        throw new ApiError(403, 'Wallet blocked due to too many invalid PIN attempts');
+          orderBy: {
+            createdAt: 'desc'
+          },
+          take: 5,
+          select: {
+            id: true,
+            type: true,
+            amount: true,
+            status: true,
+            createdAt: true
+          }
+        }
       }
-
-      await prisma.wallet.update({
-        where: { id: walletId },
-        data: { pinAttempts: attempts },
-      });
-
-      throw new ApiError(401, `Invalid PIN. ${3 - attempts} attempts remaining`);
-    }
-
-    // Reset PIN attempts on successful verification
-    if (wallet.pinAttempts > 0) {
-      await prisma.wallet.update({
-        where: { id: walletId },
-        data: { pinAttempts: 0 },
-      });
-    }
-
-    return true;
-  }
-
-  // Get wallet stats
-  static async getWalletStats(walletId: string): Promise<WalletStats> {
-    const wallet = await prisma.wallet.findUnique({
-      where: { id: walletId },
     });
 
     if (!wallet) {
       throw new ApiError(404, 'Wallet not found');
     }
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    // Calculate monthly stats
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
 
-    const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    const monthlyTransactions = await prisma.transaction.findMany({
+      where: {
+        OR: [
+          { senderWalletId: wallet.id },
+          { receiverWalletId: wallet.id }
+        ],
+        status: TransactionStatus.COMPLETED,
+        createdAt: {
+          gte: startOfMonth
+        }
+      }
+    });
 
-    const [dailySpent, monthlySpent] = await Promise.all([
-      prisma.transaction.aggregate({
-        where: {
-          walletId,
-          type: TransactionType.DEBIT,
-          createdAt: { gte: today },
-        },
-        _sum: { amount: true },
-      }),
-      prisma.transaction.aggregate({
-        where: {
-          walletId,
-          type: TransactionType.DEBIT,
-          createdAt: { gte: firstDayOfMonth },
-        },
-        _sum: { amount: true },
-      }),
-    ]);
+    const monthlyStats = monthlyTransactions.reduce((acc, transaction) => {
+      if (transaction.receiverWalletId === wallet.id) {
+        acc.income += transaction.amount;
+      } else {
+        acc.expenses += transaction.amount;
+      }
+      return acc;
+    }, { income: 0, expenses: 0 });
+
+    // Generate QR code data
+    const qrData = {
+      walletId: wallet.id,
+      userId,
+      name: `${wallet.user.firstName} ${wallet.user.lastName}`,
+      type: 'ONEPAY_WALLET'
+    };
+
+    const recentTransactions: RecentTransaction[] = wallet.transactions.map(t => ({
+      id: t.id,
+      type: t.type,
+      amount: t.amount,
+      status: t.status,
+      createdAt: t.createdAt
+    }));
 
     return {
-      dailySpent: dailySpent._sum.amount || 0,
-      monthlySpent: monthlySpent._sum.amount || 0,
-      remainingDailyLimit: wallet.dailyLimit - (dailySpent._sum.amount || 0),
-      remainingMonthlyLimit: wallet.monthlyLimit - (monthlySpent._sum.amount || 0),
-      totalBalance: wallet.balance,
+      id: wallet.id,
+      balance: wallet.balance,
+      currency: wallet.currency,
+      type: wallet.type as WalletType,
+      isActive: !wallet.isBlocked,
+      blockedUntil: wallet.blockedUntil || undefined,
+      dailyLimit: wallet.dailyLimit,
+      monthlyLimit: wallet.monthlyLimit,
+      monthlyIncome: monthlyStats.income,
+      monthlyExpenses: monthlyStats.expenses,
+      recentTransactions,
+      user: {
+        firstName: wallet.user.firstName,
+        lastName: wallet.user.lastName,
+        email: wallet.user.email ?? '',
+        phoneNumber: wallet.user.phoneNumber,
+        kycStatus: wallet.user.kyc?.status ?? KYCStatus.PENDING
+      },
+      qrCodeData: Buffer.from(JSON.stringify(qrData)).toString('base64')
     };
   }
 
-  // Add money to wallet
-  static async addMoney(walletId: string, data: TransactionDTO): Promise<Wallet> {
-    return prisma.$transaction(async (tx) => {
-      const wallet = await tx.wallet.findUnique({
-        where: { id: walletId },
+  /**
+   * Get wallet balance and basic info
+   */
+  static async getWalletBalance(userId: string): Promise<WalletResponse> {
+    const wallet = await prisma.wallet.findUnique({
+      where: { userId },
+      include: {
+        user: {
+          select: {
+            firstName: true,
+            lastName: true
+          }
+        }
+      }
+    });
+
+    if (!wallet) {
+      throw new ApiError(404, 'Wallet not found');
+    }
+
+    return {
+      id: wallet.id,
+      balance: wallet.balance,
+      currency: wallet.currency,
+      dailyLimit: wallet.dailyLimit,
+      monthlyLimit: wallet.monthlyLimit,
+      isActive: !wallet.isBlocked,
+      isBlocked: wallet.isBlocked,
+      blockedUntil: wallet.blockedUntil ? new Date(wallet.blockedUntil) : undefined,
+      firstName: wallet.user.firstName,
+      lastName: wallet.user.lastName
+    };
+  }
+
+  /**
+   * Transfer money between wallets
+   */
+  static async transfer(
+    fromUserId: string,
+    toWalletId: string,
+    amount: number,
+    description: string
+  ): Promise<TransactionDTO> {
+    const fromWallet = await prisma.wallet.findUnique({
+      where: { userId: fromUserId }
+    });
+
+    if (!fromWallet) {
+      throw new ApiError(404, 'Sender wallet not found');
+    }
+
+    const toWallet = await prisma.wallet.findUnique({
+      where: { id: toWalletId }
+    });
+
+    if (!toWallet) {
+      throw new ApiError(404, 'Receiver wallet not found');
+    }
+
+    if (fromWallet.isBlocked) {
+      throw new ApiError(403, 'Sender wallet is blocked');
+    }
+
+    if (toWallet.isBlocked) {
+      throw new ApiError(403, 'Receiver wallet is blocked');
+    }
+
+    if (fromWallet.balance < amount) {
+      throw new ApiError(400, 'Insufficient balance');
+    }
+
+    const transactionId = await generateTransactionId();
+
+    const transaction = await prisma.$transaction(async (prisma) => {
+      // Debit from sender
+      await prisma.wallet.update({
+        where: { id: fromWallet.id },
+        data: { balance: { decrement: amount } }
       });
 
-      if (!wallet) {
-        throw new ApiError(404, 'Wallet not found');
-      }
-
-      if (!wallet.isActive) {
-        throw new ApiError(403, 'Wallet is inactive');
-      }
-
-      const newBalance = wallet.balance + data.amount;
+      // Credit to receiver
+      await prisma.wallet.update({
+        where: { id: toWallet.id },
+        data: { balance: { increment: amount } }
+      });
 
       // Create transaction record
-      await tx.transaction.create({
+      const transaction = await prisma.transaction.create({
         data: {
-          walletId,
-          type: TransactionType.CREDIT,
-          amount: data.amount,
-          balance: newBalance,
-          description: data.description,
-          metadata: data.metadata,
-          status: 'COMPLETED',
-        },
-      });
-
-      // Update wallet balance
-      return tx.wallet.update({
-        where: { id: walletId },
-        data: { balance: newBalance },
-      });
-    });
-  }
-
-  // Transfer money between wallets
-  static async transfer(
-    senderWalletId: string,
-    data: TransferDTO
-  ): Promise<void> {
-    await prisma.$transaction(async (tx) => {
-      // Verify sender's wallet and PIN
-      const senderWallet = await tx.wallet.findUnique({
-        where: { id: senderWalletId },
-      });
-
-      if (!senderWallet) {
-        throw new ApiError(404, 'Sender wallet not found');
-      }
-
-      // Verify PIN
-      await this.verifyPin(senderWalletId, data.pin);
-
-      // Get receiver's wallet
-      const receiverWallet = await tx.wallet.findUnique({
-        where: { id: data.receiverWalletId },
-      });
-
-      if (!receiverWallet) {
-        throw new ApiError(404, 'Receiver wallet not found');
-      }
-
-      // Check if sender has sufficient balance
-      if (senderWallet.balance < data.amount) {
-        throw new ApiError(400, 'Insufficient balance');
-      }
-
-      // Check daily and monthly limits
-      const stats = await this.getWalletStats(senderWalletId);
-      if (stats.remainingDailyLimit < data.amount) {
-        throw new ApiError(400, 'Daily transfer limit exceeded');
-      }
-      if (stats.remainingMonthlyLimit < data.amount) {
-        throw new ApiError(400, 'Monthly transfer limit exceeded');
-      }
-
-      // Create transfer record
-      const transfer = await tx.transfer.create({
-        data: {
-          amount: data.amount,
-          senderWalletId,
-          receiverWalletId: receiverWallet.id,
-          description: data.description,
-          status: 'COMPLETED',
-        },
-      });
-
-      // Update sender's wallet and create transaction
-      await tx.wallet.update({
-        where: { id: senderWalletId },
-        data: { balance: senderWallet.balance - data.amount },
-      });
-
-      await tx.transaction.create({
-        data: {
-          walletId: senderWalletId,
+          transactionId,
           type: TransactionType.DEBIT,
-          amount: data.amount,
-          balance: senderWallet.balance - data.amount,
-          description: `Transfer to ${receiverWallet.id}`,
-          status: 'COMPLETED',
-          metadata: { transferId: transfer.id },
-        },
+          amount,
+          description,
+          status: TransactionStatus.COMPLETED,
+          walletId: fromWallet.id,
+          senderWalletId: fromWallet.id,
+          receiverWalletId: toWallet.id
+        }
       });
 
-      // Update receiver's wallet and create transaction
-      await tx.wallet.update({
-        where: { id: receiverWallet.id },
-        data: { balance: receiverWallet.balance + data.amount },
-      });
-
-      await tx.transaction.create({
-        data: {
-          walletId: receiverWallet.id,
-          type: TransactionType.CREDIT,
-          amount: data.amount,
-          balance: receiverWallet.balance + data.amount,
-          description: `Transfer from ${senderWalletId}`,
-          status: 'COMPLETED',
-          metadata: { transferId: transfer.id },
-        },
-      });
+      return {
+        id: transaction.id,
+        transactionId: transaction.transactionId,
+        type: transaction.type,
+        amount: transaction.amount,
+        description: transaction.description || undefined,
+        status: transaction.status,
+        createdAt: transaction.createdAt,
+        senderWalletId: transaction.senderWalletId!,
+        receiverWalletId: transaction.receiverWalletId!
+      };
     });
-  }
 
-  // Update wallet limits
-  static async updateLimits(
-    walletId: string,
-    data: WalletLimitDTO
-  ): Promise<Wallet> {
-    // Verify PIN first
-    await this.verifyPin(walletId, data.pin);
-
-    return prisma.wallet.update({
-      where: { id: walletId },
-      data: {
-        dailyLimit: data.dailyLimit,
-        monthlyLimit: data.monthlyLimit,
-      },
-    });
+    return transaction;
   }
 }

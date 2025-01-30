@@ -2,50 +2,51 @@ import express, { RequestHandler } from 'express';
 import { walletController } from '../controllers/walletController';
 import { authenticate } from '../middleware/auth';
 import { validate } from '../middleware/validate';
+import { generalLimiter, sensitiveOperationsLimiter, pinAttemptLimiter } from '../middleware/rateLimit';
 import {
   createWalletValidation,
-  addMoneyValidation,
   transferValidation,
-  updateLimitsValidation,
 } from '../validations/walletValidations';
 
 const router = express.Router();
 
-// All routes require authentication
+// All routes require authentication and general rate limiting
 router.use(authenticate as RequestHandler);
+router.use(generalLimiter);
 
-// Create new wallet
+// Create new wallet - sensitive operation
 router.post(
   '/',
+  sensitiveOperationsLimiter,
   validate(createWalletValidation),
   walletController.createWallet as RequestHandler
 );
 
 // Get wallet details
 router.get(
-  '/:walletId',
+  '/',
   walletController.getWallet as RequestHandler
 );
 
-// Add money to wallet
-router.post(
-  '/:walletId/add',
-  validate(addMoneyValidation),
-  walletController.addMoney as RequestHandler
+// Get wallet balance (quick endpoint)
+router.get(
+  '/balance',
+  walletController.getWalletBalance as RequestHandler
 );
 
-// Transfer money between wallets
+// Get wallet stats for dashboard
+router.get(
+  '/stats',
+  walletController.getWalletStats as RequestHandler
+);
+
+// Transfer money between wallets - sensitive operation with PIN
 router.post(
-  '/:walletId/transfer',
+  '/transfer',
+  sensitiveOperationsLimiter,
+  pinAttemptLimiter,
   validate(transferValidation),
   walletController.transfer as RequestHandler
 );
 
-// Update wallet limits
-router.patch(
-  '/:walletId/limits',
-  validate(updateLimitsValidation),
-  walletController.updateLimits as RequestHandler
-);
-
-export default router; 
+export default router;

@@ -15,6 +15,8 @@ const authRoutes_1 = __importDefault(require("./routes/authRoutes"));
 const walletRoutes_1 = __importDefault(require("./routes/walletRoutes"));
 const kycRoutes_1 = __importDefault(require("./routes/kycRoutes"));
 const onboardingRoutes_1 = __importDefault(require("./routes/onboardingRoutes"));
+const profileRoutes_1 = __importDefault(require("./routes/profileRoutes"));
+const adminRoutes_1 = __importDefault(require("./routes/adminRoutes"));
 const express_rate_limit_1 = require("express-rate-limit");
 const logger_1 = __importDefault(require("./utils/logger"));
 const globalForPrisma = global;
@@ -69,9 +71,11 @@ app.use(express_1.default.urlencoded({ extended: true, limit: '10mb' }));
 app.use(apiLimiter);
 app.use('/api/auth', authRoutes_1.default);
 app.use('/api/users', userRoutes_1.default);
-app.use('/api/wallets', walletRoutes_1.default);
-app.use('/api/onboarding', onboardingRoutes_1.default);
+app.use('/api/wallet', walletRoutes_1.default);
 app.use('/api/kyc', kycRoutes_1.default);
+app.use('/api/onboarding', onboardingRoutes_1.default);
+app.use('/api/profile', profileRoutes_1.default);
+app.use('/api/admin', adminRoutes_1.default);
 app.get('/', (_req, res) => {
     const html = `
     <!DOCTYPE html>

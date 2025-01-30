@@ -1,7 +1,14 @@
-import { TransactionType, TransactionStatus, TransferStatus } from '@prisma/client';
+import { TransactionType, TransactionStatus, KYCStatus } from '@prisma/client';
+
+export enum WalletType {
+  SAVINGS = 'SAVINGS',
+  CURRENT = 'CURRENT',
+  BUSINESS = 'BUSINESS'
+}
 
 export interface CreateWalletDTO {
   pin: string;
+  type: WalletType;
   currency?: string;
   dailyLimit?: number;
   monthlyLimit?: number;
@@ -12,15 +19,20 @@ export interface WalletPinDTO {
 }
 
 export interface TransactionDTO {
+  id: string;
+  transactionId: string;
+  type: TransactionType;
   amount: number;
   description?: string;
-  type: TransactionType;
-  metadata?: Record<string, any>;
+  status: TransactionStatus;
+  createdAt: Date;
+  senderWalletId: string;
+  receiverWalletId: string;
 }
 
 export interface TransferDTO {
+  toWalletId: string;
   amount: number;
-  receiverWalletId: string;
   description?: string;
   pin: string;
 }
@@ -34,38 +46,36 @@ export interface WalletResponse {
   isActive: boolean;
   isBlocked: boolean;
   blockedUntil?: Date;
+  firstName: string;
+  lastName: string;
 }
 
-export interface TransactionResponse {
+export interface RecentTransaction {
   id: string;
   type: TransactionType;
   amount: number;
-  balance: number;
-  description?: string;
   status: TransactionStatus;
   createdAt: Date;
 }
 
-export interface TransferResponse {
-  id: string;
-  amount: number;
-  description?: string;
-  status: TransferStatus;
-  createdAt: Date;
-  senderWalletId: string;
-  receiverWalletId: string;
-}
-
-export interface WalletLimitDTO {
-  dailyLimit?: number;
-  monthlyLimit?: number;
-  pin: string;
-}
-
 export interface WalletStats {
-  dailySpent: number;
-  monthlySpent: number;
-  remainingDailyLimit: number;
-  remainingMonthlyLimit: number;
-  totalBalance: number;
-} 
+  id: string;
+  balance: number;
+  currency: string;
+  type: WalletType;
+  isActive: boolean;
+  blockedUntil?: Date;
+  dailyLimit: number;
+  monthlyLimit: number;
+  monthlyIncome: number;
+  monthlyExpenses: number;
+  recentTransactions: RecentTransaction[];
+  user: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phoneNumber: string;
+    kycStatus: KYCStatus;
+  };
+  qrCodeData: string;
+}

@@ -1,9 +1,14 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.verifyOTP = exports.generateOTP = void 0;
+exports.adminLogin = exports.verifyOTP = exports.generateOTP = void 0;
 const jwt_1 = require("../utils/jwt");
 const twilioService_1 = require("../services/twilioService");
 const prisma_1 = require("../lib/prisma");
+const client_1 = require("@prisma/client");
+const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const generateOTP = async (req, res) => {
     try {
         const { phoneNumber } = req.body;
@@ -124,4 +129,61 @@ const verifyOTP = async (req, res) => {
     }
 };
 exports.verifyOTP = verifyOTP;
+const adminLogin = async (req, res) => {
+    try {
+        const { phoneNumber, password } = req.body;
+        const admin = await prisma_1.prisma.user.findFirst({
+            where: {
+                phoneNumber,
+                role: client_1.Role.ADMIN,
+                isActive: true,
+            },
+        });
+        if (!admin || !admin.password) {
+            res.status(401).json({
+                success: false,
+                error: 'Invalid admin credentials'
+            });
+            return;
+        }
+        const isValidPassword = await bcryptjs_1.default.compare(password, admin.password);
+        if (!isValidPassword) {
+            res.status(401).json({
+                success: false,
+                error: 'Invalid admin credentials'
+            });
+            return;
+        }
+        const tokenPayload = {
+            userId: admin.id,
+            role: admin.role
+        };
+        const token = (0, jwt_1.generateToken)(tokenPayload);
+        res.json({
+            success: true,
+            data: {
+                token,
+                user: {
+                    id: admin.id,
+                    phoneNumber: admin.phoneNumber,
+                    email: admin.email,
+                    firstName: admin.firstName,
+                    lastName: admin.lastName,
+                    role: admin.role,
+                    isVerified: admin.isVerified,
+                    createdAt: admin.createdAt,
+                    updatedAt: admin.updatedAt
+                },
+            },
+        });
+    }
+    catch (error) {
+        console.error('Admin login error:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to login'
+        });
+    }
+};
+exports.adminLogin = adminLogin;
 //# sourceMappingURL=authController.js.map
