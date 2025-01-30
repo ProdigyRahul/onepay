@@ -31,52 +31,115 @@ export interface FinancialProfileData {
 
 export const onboardingApi = {
   updateProfile: async (data: { firstName: string; lastName: string; email: string; panNumber: string }) => {
-    const response = await apiClient.post('/onboarding/profile', data);
-    return response.data;
+    try {
+      const response = await apiClient.post('/onboarding/profile', data);
+      return response.data;
+    } catch (error) {
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('Failed to update profile');
+    }
   },
 
   updateAge: async (age: number) => {
-    const response = await apiClient.post('/onboarding/age', { age });
-    return response.data;
+    try {
+      const response = await apiClient.post('/onboarding/age', { age });
+      return response.data;
+    } catch (error) {
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('Failed to update age');
+    }
   },
 
   updatePrimaryGoal: async (primaryGoal: UserGoal) => {
-    const response = await apiClient.post('/onboarding/primary-goal', { primaryGoal });
-    return response.data;
+    try {
+      const response = await apiClient.post('/onboarding/primary-goal', { primaryGoal });
+      return response.data;
+    } catch (error) {
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('Failed to update primary goal');
+    }
   },
 
   updateIncomeRange: async (incomeRange: IncomeRange) => {
-    const response = await apiClient.post('/onboarding/income-range', { incomeRange });
-    return response.data;
+    try {
+      const response = await apiClient.post('/onboarding/income-range', { incomeRange });
+      return response.data;
+    } catch (error) {
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('Failed to update income range');
+    }
   },
 
   updateSpendingHabits: async (data: { spendingHabit: SpendingHabit; targetSpendingPercentage: number }) => {
-    const response = await apiClient.post('/onboarding/spending-habits', data);
-    return response.data;
+    try {
+      const response = await apiClient.post('/onboarding/spending-habits', data);
+      return response.data;
+    } catch (error) {
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('Failed to update spending habits');
+    }
   },
 
   // Legacy method - will be deprecated
   updateFinancialProfile: async (data: FinancialProfileData) => {
-    const response = await apiClient.post('/onboarding/financial-profile', data);
-    return response.data;
+    try {
+      const response = await apiClient.post('/onboarding/financial-profile', data);
+      return response.data;
+    } catch (error) {
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('Failed to update financial profile');
+    }
   },
 
   getOnboardingStatus: async () => {
-    const response = await apiClient.get('/onboarding/status');
-    return response.data;
+    try {
+      const response = await apiClient.get('/onboarding/status');
+      return response.data;
+    } catch (error) {
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('Failed to get onboarding status');
+    }
   },
 
   updateKYC: async (kycData: FormData) => {
-    const response = await apiClient.post('/users/kyc', kycData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
-    return response.data;
+    try {
+      const response = await apiClient.post('/users/kyc', kycData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response.data;
+    } catch (error) {
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('Failed to update KYC');
+    }
   },
 
   getKYCStatus: async () => {
-    const response = await apiClient.get('/users/kyc');
-    return response.data;
+    try {
+      const response = await apiClient.get('/users/kyc');
+      return response.data;
+    } catch (error) {
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('Failed to get KYC status');
+    }
   },
 };

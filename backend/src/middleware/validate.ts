@@ -7,19 +7,53 @@ export const validate = (schema: AnyZodObject) => async (
   next: NextFunction
 ) => {
   try {
-    console.log('Validating request body:', req.body);
-    const result = await schema.parseAsync(req.body);
+    console.log('=== Validation Start ===');
+    console.log('Raw request body:', req.body);
+    console.log('Request headers:', req.headers);
+    console.log('Validation schema:', schema);
+
+    // Check if body exists
+    if (!req.body) {
+      console.error('Request body is undefined');
+      return res.status(400).json({
+        success: false,
+        error: 'Request body is required',
+      });
+    }
+
+    // Wrap the body in a 'body' object if not already wrapped
+    const dataToValidate = {
+      body: req.body
+    };
+    console.log('Data to validate:', dataToValidate);
+
+    const result = await schema.parseAsync(dataToValidate);
     console.log('Validation successful:', result);
+    
+    // Store validated data back in request
+    req.body = result.body;
+    console.log('Updated request body:', req.body);
+    console.log('=== Validation End ===');
+    
     return next();
   } catch (error) {
-    console.error('Validation error:', error);
+    console.error('=== Validation Error ===');
+    console.error('Error details:', error);
+    
     if (error instanceof ZodError) {
+      console.error('Zod validation errors:', {
+        errors: error.errors,
+        formattedErrors: error.format(),
+      });
+      
       return res.status(400).json({
         success: false,
         error: error.errors[0]?.message || 'Validation failed',
         details: error.errors
       });
     }
+    
+    console.error('Non-Zod error:', error);
     return res.status(400).json({
       success: false,
       error: 'Validation failed',

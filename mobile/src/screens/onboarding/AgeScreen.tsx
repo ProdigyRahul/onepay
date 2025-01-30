@@ -156,7 +156,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: FONT_SIZES.xxl,
     fontFamily: FONTS.bold,
-    color: COLORS.textPrimary,
+    color: COLORS.text,
     marginBottom: hp(1),
   },
   titleHighlight: {
@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: FONT_SIZES.md,
     fontFamily: FONTS.regular,
-    color: COLORS.textSecondary,
+    color: COLORS.textLight,
     lineHeight: hp(2.8),
   },
   ageDisplayContainer: {
@@ -189,7 +189,7 @@ const styles = StyleSheet.create({
   yearText: {
     fontSize: FONT_SIZES.md,
     fontFamily: FONTS.medium,
-    color: COLORS.textSecondary,
+    color: COLORS.textLight,
   },
   validationText: {
     fontSize: FONT_SIZES.sm,
