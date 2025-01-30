@@ -93,6 +93,59 @@ await prisma.$transaction(async (tx) => {
 });
 ```
 
+## Deployment Considerations
+
+### ESM Compatibility
+When using ES Modules in Vercel deployments:
+
+1. Use dynamic imports for ESM-only packages:
+```typescript
+// Instead of static import
+import { something } from 'esm-package';
+
+// Use dynamic import
+const { something } = await import('esm-package');
+```
+
+2. For frequently used ESM modules, initialize once and cache:
+```typescript
+let cachedFunction: Function;
+
+const initializeFunction = async () => {
+  const { something } = await import('esm-package');
+  cachedFunction = something;
+};
+
+// Initialize on startup
+initializeFunction().catch(console.error);
+
+export const useFunction = async () => {
+  if (!cachedFunction) {
+    await initializeFunction();
+  }
+  return cachedFunction();
+};
+```
+
+3. Update tsconfig.json settings if needed:
+```json
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true
+  }
+}
+```
+
+### Common ESM-only Packages
+- nanoid
+- chalk (v5+)
+- execa (v6+)
+- strip-ansi (v7+)
+
+Always check the package documentation for ESM compatibility.
+
 ## Security
 - Rate limiting for OTP generation (60 seconds)
 - Phone number format validation
