@@ -1,0 +1,25 @@
+this is too descriptive. i want short and simple and best: flowchart TD classDef
+default fill:#e1f0ff,stroke:#1a73e8,stroke-width:2px,color:#1a73e8 classDef
+process fill:#1a73e8,stroke:#1557b0,stroke-width:2px,color:white classDef
+decision fill:#f8f9fa,stroke:#1a73e8,stroke-width:2px,color:#1a73e8 classDef
+terminator fill:#34a853,stroke:#2b8a4e,stroke-width:2px,color:white %%
+Authentication Flow Start([App Launch]):::terminator --> Lang[Language
+Selection]:::process Lang --> Phone[Phone Number Input]:::process Phone -->
+OTP[OTP Verification]:::process OTP --> Bio[Biometric Setup]:::process Bio -->
+IsReturning{Returning User?}:::decision %% User Type Branch IsReturning -->|Yes|
+Dashboard[Main Dashboard]:::process IsReturning -->|No| Onboarding[Profile
+Completion]:::process %% Onboarding Flow Onboarding --> FinPref[Financial
+Preferences]:::process FinPref --> KYC{KYC Verification}:::decision KYC
+-->|Rejected| Reupload[Re-upload Documents]:::process Reupload --> KYC KYC
+-->|Approved| Wallet[Wallet Creation]:::process Wallet --> Dashboard %% Main
+Dashboard Features Dashboard --> UserAction{User Action}:::decision UserAction
+--> Wallet_Section[Wallet Section]:::process UserAction --> Learn[Learn &
+Earn]:::process UserAction --> Invest[Investment Options]:::process UserAction
+--> Budget[Budget & Insights]:::process UserAction --> Credit[Credit
+Services]:::process %% Core Features Wallet_Section --> SendMoney[Send
+Money]:::process Wallet_Section --> AddFunds[Add Funds]:::process Wallet_Section
+--> PayBills[Pay Bills]:::process Learn --> Modules[Gamified Modules]:::process
+Learn --> Progress[Progress Tracking]:::process Invest --> FD[Fixed
+Deposits]:::process Invest --> MF[Mutual Funds]:::process Invest -->
+Gold[Digital Gold]:::process %% Exit Flow Dashboard --> Timeout([Session
+Timeout/Logout]):::terminator
