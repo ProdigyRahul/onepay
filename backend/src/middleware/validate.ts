@@ -21,17 +21,13 @@ export const validate = (schema: AnyZodObject) => async (
       });
     }
 
-    // Wrap the body in a 'body' object if not already wrapped
-    const dataToValidate = {
-      body: req.body
-    };
-    console.log('Data to validate:', dataToValidate);
-
-    const result = await schema.parseAsync(dataToValidate);
+    // Directly validate the request body
+    console.log('Data to validate:', req.body);
+    const result = await schema.parseAsync(req.body);
     console.log('Validation successful:', result);
     
     // Store validated data back in request
-    req.body = result.body;
+    req.body = result;
     console.log('Updated request body:', req.body);
     console.log('=== Validation End ===');
     
