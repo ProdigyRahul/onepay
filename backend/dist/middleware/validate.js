@@ -16,13 +16,10 @@ const validate = (schema) => async (req, res, next) => {
                 error: 'Request body is required',
             });
         }
-        const dataToValidate = {
-            body: req.body
-        };
-        console.log('Data to validate:', dataToValidate);
-        const result = await schema.parseAsync(dataToValidate);
+        console.log('Data to validate:', req.body);
+        const result = await schema.parseAsync(req.body);
         console.log('Validation successful:', result);
-        req.body = result.body;
+        req.body = result;
         console.log('Updated request body:', req.body);
         console.log('=== Validation End ===');
         return next();

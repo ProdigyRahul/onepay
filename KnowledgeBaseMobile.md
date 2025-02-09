@@ -95,6 +95,41 @@ try {
 - Type-safe navigation using `RootStackParamList`
 - Screen props typed with `RootStackScreenProps`
 
+## Dashboard Screen
+1. Components
+   - Balance Card
+     - Shows current wallet balance
+     - Quick action buttons
+   - Recent Transactions
+     - List of latest transactions
+     - Transaction type indicators
+   - Quick Actions
+     - Send Money
+     - Request Money
+     - Scan QR
+     - View History
+
+2. API Integration
+   - GET /api/wallet/balance for wallet info
+   - Transaction history endpoint for recent activities
+   - User profile data for personalization
+
+3. Redux Integration
+   - Wallet slice for balance management
+   - Transaction slice for history
+   - Loading states management
+
+4. Navigation
+   - Tab navigation root
+   - Stack navigation for action flows
+   - Modal screens for quick actions
+
+5. Error Handling
+   - Balance fetch retry mechanism
+   - Transaction list error states
+   - Offline mode indicators
+   - Refresh functionality
+
 ## API Request Body Structure
 
 ### Onboarding API
