@@ -174,6 +174,11 @@ export const adminLogin = async (
       },
     });
 
+    console.log('Admin lookup result:', admin ? 'Found' : 'Not found');
+    console.log('Admin phone number:', phoneNumber);
+    console.log('Admin role:', admin?.role);
+    console.log('Admin isActive:', admin?.isActive);
+
     if (!admin || !admin.password) {
       res.status(401).json({
         success: false,
@@ -183,7 +188,10 @@ export const adminLogin = async (
     }
 
     // Verify password
+    console.log('Attempting password verification...');
     const isValidPassword = await bcrypt.compare(password, admin.password);
+    console.log('Password verification result:', isValidPassword);
+
     if (!isValidPassword) {
       res.status(401).json({
         success: false,
