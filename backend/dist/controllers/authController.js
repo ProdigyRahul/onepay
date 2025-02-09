@@ -139,6 +139,10 @@ const adminLogin = async (req, res) => {
                 isActive: true,
             },
         });
+        console.log('Admin lookup result:', admin ? 'Found' : 'Not found');
+        console.log('Admin phone number:', phoneNumber);
+        console.log('Admin role:', admin === null || admin === void 0 ? void 0 : admin.role);
+        console.log('Admin isActive:', admin === null || admin === void 0 ? void 0 : admin.isActive);
         if (!admin || !admin.password) {
             res.status(401).json({
                 success: false,
@@ -146,7 +150,9 @@ const adminLogin = async (req, res) => {
             });
             return;
         }
+        console.log('Attempting password verification...');
         const isValidPassword = await bcryptjs_1.default.compare(password, admin.password);
+        console.log('Password verification result:', isValidPassword);
         if (!isValidPassword) {
             res.status(401).json({
                 success: false,
